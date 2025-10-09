@@ -1,0 +1,10 @@
+__pycache__/
+*.py[cod]
+*.env
+*.log
+*.db
+.git/
+Dockerfile
+README.md
+tests/
+node_modules/

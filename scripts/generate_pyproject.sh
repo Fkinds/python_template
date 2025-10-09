@@ -1,0 +1,38 @@
+#!/bin/bash
+set -e
+
+echo "📄 pyproject.toml を生成中..."
+
+cat << EOF > pyproject.toml
+[tool.poetry]
+name = "my-project"
+version = "0.1.0"
+description = ""
+authors = ["fkinds <wkhs.1020@gmail.com>"]
+readme = "README.md"
+packages = [{ include = "src" }]
+
+[tool.poetry.dependencies]
+python = "^3.11"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.0"
+ruff = "^0.1.0"
+mypy = "^1.0"
+pre-commit = "^3.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[tool.ruff]
+line-length = 100
+select = ["E", "F", "I", "B"]
+ignore = ["E501"]
+
+[tool.mypy]
+strict = true
+ignore_missing_imports = true
+EOF
+
+echo "✅ pyproject.toml を作成しました"
