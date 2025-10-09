@@ -13,10 +13,10 @@ repos:
     rev: v4.5.0
     hooks:
       - id: end-of-file-fixer
-        exclude: node_modules/
+        exclude: node_modules
         exclude: gitignore
       - id: trailing-whitespace
-        exclude: node_modules/
+        exclude: node_modules
         exclude: gitignore
 
   - repo: local
