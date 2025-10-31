@@ -24,20 +24,14 @@ repos:
     hooks:
       - id: pytest
         name: Run Pytest
-        entry: poetry run pytest
+        entry: uv run pytest
         language: system
         types: [python]
 EOF
 
-echo "📦 pre-commit を dev-dependencies に追加..."
-poetry add --dev pre-commit
-
-echo "📦 poetry.lock を更新中..."
-poetry lock
-
-echo "📦 依存関係をインストール中..."
-poetry install
+echo "📦 pre-commit を uv 仮想環境に追加..."
+uv add --dev pre-commit
 
 echo "🔗 pre-commit をインストール＆初期化..."
 git config --unset-all core.hooksPath || true
-poetry run pre-commit install
+uv run pre-commit install
