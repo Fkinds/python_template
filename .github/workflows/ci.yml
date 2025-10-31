@@ -33,7 +33,7 @@ jobs:
         run: npm ci
 
       - name: ✅ Run Ruff (Lint)
-        run: uv run ruff -- .
+        run: uv run ruff check .
 
       - name: ✅ Run MyPy (Type Check)
         run: uv run mypy -- .
