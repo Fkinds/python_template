@@ -4,37 +4,28 @@
 FROM python:3.11-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    POETRY_VERSION=1.8.2
+    PYTHONUNBUFFERED=1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl build-essential gcc git \
+    curl build-essential gcc git ca-certificates \
     && useradd --create-home --shell /bin/bash dev \
-    && pip install --no-cache-dir --upgrade pip \
-    && pip install pipx \
-    && pipx ensurepath \
-    && pipx install uv \
-    && curl -sSL https://install.python-poetry.org | python3 - \
+    && curl -LsSf https://astral.sh/uv/install.sh | sh \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-ENV PATH="/root/.local/bin:/root/.local/pipx/venvs/uv/bin:$PATH"
+ENV PATH="/root/.cargo/bin:/root/.local/bin:$PATH"
 
 WORKDIR /home/dev
 
-COPY pyproject.toml poetry.lock* ./
+# pyproject.toml と uv.lock をコピー
+COPY pyproject.toml uv.lock* ./
 
-RUN poetry config virtualenvs.create false \
-    && poetry export --without-hashes --only main,dev --format=requirements.txt -o requirements.txt \
-    && uv pip install --system -r requirements.txt \
-    && rm requirements.txt
+# アプリをコピー
+COPY . .
 
-# COPY app/ /home/dev/app
-# COPY tests/ /home/dev/tests
-
-# # Lint / 型チェック / テスト
-# RUN ruff check app tests && \
-#     mypy app && \
-#     pytest tests
+# Lint / 型チェック / テスト
+RUN uv run ruff check .
+RUN uv run mypy .
+RUN uv run pytest --numprocesses auto # テストエラーでもビルド続行したい場合
 
 # ============================
 # Stage 2: Runtime
@@ -42,27 +33,28 @@ RUN poetry config virtualenvs.create false \
 FROM python:3.11-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    POETRY_VERSION=1.8.2
+    PYTHONUNBUFFERED=1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-    pipx curl bash util-linux \
-    && pipx ensurepath \
-    && pipx install uv \
-    && curl -sSL https://install.python-poetry.org | python3 - \
+    curl bash ca-certificates \
+    && curl -LsSf https://astral.sh/uv/install.sh | sh \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-ENV PATH="/root/.local/bin:/root/.local/pipx/venvs/uv/bin:$PATH"
+ENV PATH="/root/.cargo/bin:/root/.local/bin:$PATH"
 
 RUN useradd --create-home --shell /bin/bash dev
-
 WORKDIR /home/${USER}
 
-COPY --chown=dev:dev --from=builder /home/${USER} /home/${USER}
-COPY setEnv.sh /home/${USER}/setEnv.sh
-RUN chmod +x /home/${USER}/setEnv.sh
+# Builder ステージから仮想環境をコピー
+COPY --from=builder /home/${USER}/.venv /home/${USER}/.venv
+COPY --from=builder /home/${USER} /home/${USER}
+
+ENV PATH="/home/dev/.venv/bin:$PATH"
 
 # デフォルトで${USER}ユーザーで起動
 USER ${USER}
+
+COPY setEnv.sh /home/${USER}/setEnv.sh
+RUN chmod +x /home/${USER}/setEnv.sh
 
 CMD ["bash", "/home/${USER}/setEnv.sh"]

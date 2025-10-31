@@ -1,10 +1,49 @@
+# Python
 __pycache__/
-*.py[cod]
-*.env
+*.pyc
+*.pyo
+*.pyd
+*.pdb
+*.egg-info/
+*.eggs/
 *.log
-*.db
-.git/
+
+# Virtual environments
+.venv/
+venv/
+myenv/
+env/
+
+# Distribution / build
+build/
+dist/
+wheels/
+.eggs/
+*.egg-info/
+
+# Tests & coverage
+.coverage
+htmlcov/
+pytest_cache/
+.tox/
+.mypy_cache/
+.ruff_cache/
+
+# Git
+.git
+.gitignore
+
+# Docker
 Dockerfile
-README.md
-tests/
+.dockerignore
+
+# Node (if using frontend)
 node_modules/
+npm-debug.log
+yarn-error.log
+
+# OS / IDE
+.DS_Store
+.vscode/
+.idea/
+*.swp
