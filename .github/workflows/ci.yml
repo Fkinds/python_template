@@ -6,42 +6,85 @@ on:
   pull_request:
 
 jobs:
-  build:
+  ruff:
     runs-on: ubuntu-latest
-
     steps:
-      - name: 📥 Checkout code
-        uses: actions/checkout@v3
-
-      - name: 🐍 Set up Python
-        uses: actions/setup-python@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
         with:
-          python-version: '3.14'
+          python-version: '3.11'
+      - run: pip install uv
+      - run: uv sync --dev
+      - run: uv run ruff check src tests
 
-      - name: 🟦 Set up Node.js
-        uses: actions/setup-node@v3
+  mypy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install uv
+      - run: uv sync --dev
+      - run: uv run mypy src tests
+
+  unit_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install uv
+        run: pip install uv
+      - name: Sync dependencies
+        run: uv sync --dev
+      - name: Run unit tests (parallel)
+        run: uv run pytest tests/unit --numprocesses auto
+
+  functional_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install uv
+      - run: uv sync --dev
+      - run: uv run pytest tests/functional --numprocesses auto
+
+  integration_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - run: pip install uv
+      - run: uv sync --dev
+      - run: uv run pytest tests/integration --maxfail=1 --disable-warnings -q
+
+  # e2e_test:
+  #   runs-on: ubuntu-latest
+  #   needs: lint
+  #   steps:
+  #     - uses: actions/checkout@v4
+  #     - uses: actions/setup-python@v5
+  #       with:
+  #         python-version: '3.11'
+  #     - run: pip install uv
+  #     - run: uv sync --dev
+  #     - run: uv run pytest tests/e2e --maxfail=1 --disable-warnings -q
+
+  commitlint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '18'
-
-      - name: 📦 Install uv
-        run: pip install uv
-
-      - name: 📦 Sync Python dependencies
-        run: uv sync
-
-      - name: 📦 Install Node.js dependencies
-        run: npm ci
-
-      - name: ✅ Run Ruff (Lint)
-        run: uv run ruff check .
-
-      - name: ✅ Run MyPy (Type Check)
-        run: uv run mypy -- .
-
-      - name: ✅ Run Tests (Pytest)
-        run: uv run pytest --maxfail=1 --disable-warnings -q
-
-      - name: 🔍 Run Commitlint
-        run: |
+      - run: npm install --save-dev @commitlint/{cli,config-conventional}
+      - run: |
+          echo "module.exports = {extends: ['@commitlint/config-conventional']};" > commitlint.config.js
           LAST_COMMIT=$(git log -1 --pretty=%B)
           echo "$LAST_COMMIT" | npx commitlint

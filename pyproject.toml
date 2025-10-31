@@ -20,9 +20,20 @@ dependencies = [
 [tool.setuptools.packages.find]
 where = ["src"]
 
+[tool.uv]
+dev-dependencies = [
+    "pytest",
+    "pytest-xdist",
+    "ruff",
+    "mypy",
+    "pre-commit",
+]
+
+
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "pytest-xdist",
     "ruff",
     "mypy",
     "pre-commit",
