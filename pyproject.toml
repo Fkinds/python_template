@@ -1,29 +1,38 @@
-[tool.poetry]
+[project]
 name = "my-project"
 version = "0.1.0"
 description = ""
-authors = ["fkinds <wkhs.1020@gmail.com>"]
+authors = [
+    { name = "fkinds", email = "wkhs.1020@gmail.com" }
+]
 readme = "README.md"
-packages = [{ include = "src" }]
+dependencies = [
+    "attrs>=25.4.0",
+    "fixit>=2.1.0",
+    "import-linter>=2.5.2",
+    "mypy>=1.18.2",
+    "pre-commit>=4.3.0",
+    "pydantic>=2.12.3",
+    "pytest>=8.4.2",
+    "ruff>=0.14.3",
+]
 
-[tool.poetry.dependencies]
-python = "^3.11"
+[tool.setuptools.packages.find]
+where = ["src"]
 
-[tool.poetry.dev-dependencies]
-pytest = "^7.0"
-ruff = "^0.1.0"
-mypy = "^1.0"
-pre-commit = "^3.0"
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "ruff",
+    "mypy",
+    "pre-commit",
+]
 
 [build-system]
-requires = ["poetry-core"]
-build-backend = "poetry.core.masonry.api"
+requires = ["setuptools>=42", "wheel"]
+build-backend = "setuptools.build_meta"
 
-[tool.ruff]
-line-length = 100
-select = ["E", "F", "I", "B"]
-ignore = ["E501"]
-
-[tool.mypy]
-strict = true
-ignore_missing_imports = true
+[dependency-groups]
+dev = [
+    "pre-commit>=4.3.0",
+]

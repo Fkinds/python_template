@@ -1,0 +1,18 @@
+Metadata-Version: 2.4
+Name: my-project
+Version: 0.1.0
+Author-email: fkinds <wkhs.1020@gmail.com>
+Description-Content-Type: text/markdown
+Requires-Dist: attrs>=25.4.0
+Requires-Dist: fixit>=2.1.0
+Requires-Dist: import-linter>=2.5.2
+Requires-Dist: mypy>=1.18.2
+Requires-Dist: pre-commit>=4.3.0
+Requires-Dist: pydantic>=2.12.3
+Requires-Dist: pytest>=8.4.2
+Requires-Dist: ruff>=0.14.3
+Provides-Extra: dev
+Requires-Dist: pytest; extra == "dev"
+Requires-Dist: ruff; extra == "dev"
+Requires-Dist: mypy; extra == "dev"
+Requires-Dist: pre-commit; extra == "dev"

@@ -11,13 +11,21 @@ sudo apt-get install -y \
   curl \
   gnupg \
   lsb-release \
-  python3 \
-  python3-venv \
-  python3-pip \
-  build-essential  # n のビルドに必要
+  build-essential \
+  git \
+  wget \
+  libssl-dev \
+  zlib1g-dev \
+  libbz2-dev \
+  libreadline-dev \
+  libsqlite3-dev \
+  llvm \
+  libncurses5-dev \
+  libncursesw5-dev \
+  xz-utils \
+  libffi-dev \
+  liblzma-dev
 
-echo "🐍 Python 3.11 をインストール中..."
-sudo apt-get install -y python3.11 python3.11-venv python3.11-distutils
 
 echo "🔐 Docker GPGキーを追加..."
 curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /usr/share/keyrings/docker-archive-keyring.gpg
@@ -32,6 +40,10 @@ sudo apt-get install -y docker-ce docker-ce-cli containerd.io
 
 echo "👤 dockerグループにユーザー追加..."
 sudo usermod -aG docker $USER
+
+# ------------------------------
+# Node.js セットアップ
+# ------------------------------
 
 echo "🟢 Node.js の最新版を n でインストール中..."
 curl -L https://raw.githubusercontent.com/tj/n/master/bin/n -o n
@@ -48,31 +60,27 @@ export PATH="/usr/local/bin:$PATH"
 echo "✅ Node.js バージョン: $(node -v)"
 echo "✅ npm バージョン: $(npm -v)"
 
-echo "📦 Poetryをインストール中..."
-curl -sSL https://install.python-poetry.org | python3 -
+# ------------------------------
+# uv セットアップ
+# ------------------------------
 
-# Poetryのパスをbashrcに追加
-if ! grep -q 'export PATH="$HOME/.local/bin:$PATH"' ~/.bashrc; then
-  echo 'export PATH="$HOME/.local/bin:$PATH"' >> ~/.bashrc
-fi
+PYTHON_VERSION="3.14.0"   # 好きなバージョンに変更可能
+VENV_NAME="myenv"
 
-export PATH="$HOME/.local/bin:$PATH"
+echo "🐍 Python $PYTHON_VERSION を uv でインストール中..."
+uv python install $PYTHON_VERSION
 
-echo "✅ Poetry バージョン: $(poetry --version)"
+echo "🛠 仮想環境 $VENV_NAME を作成..."
+uv venv --python $PYTHON_VERSION $VENV_NAME
 
-echo "インストール完了！"
+echo "🔄 仮想環境を有効化..."
+source myenv/bin/activate
+
+echo "✅ 現在のPythonバージョン: $(python --version)"
+echo "✅ pip バージョン: $(pip --version)"
+
+echo "📦 Docker / Node.js / uv / Python 環境のセットアップ完了！"
 echo "ターミナルを再起動、または以下を実行してください:"
 echo "source ~/.bashrc"
+echo "uv activate $VENV_NAME  # Python 仮想環境有効化"
 echo "groups \$USER  # dockerグループに入っていることを確認"
-
-echo "🐍 PoetryプロジェクトのPythonバージョンを3.11に設定中..."
-
-# プロジェクトディレクトリ（例: ~/python）に移動する場合はここでcd
-# cd ~/python
-
-# poetry環境を3.11で作り直し（既にある場合は切り替え）
-poetry env use python3.11 || poetry env use $(which python3.11)
-
-echo "✅ 現在のPythonバージョン: $(poetry run python --version)"
-
-echo "セットアップ完了！"

@@ -16,32 +16,30 @@ jobs:
       - name: 🐍 Set up Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.11'
+          python-version: '3.14'
 
       - name: 🟦 Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      - name: 📦 Install Poetry
-        run: |
-          curl -sSL https://install.python-poetry.org | python3 -
-          echo "$HOME/.local/bin" >> $GITHUB_PATH
+      - name: 📦 Install uv
+        run: pip install uv
 
-      - name: 📦 Install Python dependencies
-        run: poetry install
+      - name: 📦 Sync Python dependencies
+        run: uv sync
 
       - name: 📦 Install Node.js dependencies
         run: npm ci
 
       - name: ✅ Run Ruff (Lint)
-        run: poetry run ruff .
+        run: uv run ruff .
 
       - name: ✅ Run MyPy (Type Check)
-        run: poetry run mypy .
+        run: uv run mypy .
 
       - name: ✅ Run Tests (Pytest)
-        run: poetry run pytest
+        run: uv run pytest
 
       - name: 🔍 Run Commitlint
         run: |
