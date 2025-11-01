@@ -1,7 +1,7 @@
 # ============================
 # Stage 1: Builder / CI
 # ============================
-FROM python:3.11-slim AS builder
+FROM python:3.14.0-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
@@ -22,6 +22,9 @@ COPY pyproject.toml uv.lock* ./
 # アプリをコピー
 COPY . .
 
+# uv を実行して依存関係を同期
+RUN uv sync --frozen
+
 # Lint / 型チェック / テスト
 RUN uv run ruff check .
 RUN uv run mypy .
@@ -33,28 +36,36 @@ RUN uv run pytest --numprocesses auto # テストエラーでもビルド続行�
 FROM python:3.11-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1
+    PYTHONUNBUFFERED=1 \
+    PATH="/root/.cargo/bin:/root/.local/bin:$PATH"
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl bash ca-certificates \
     && curl -LsSf https://astral.sh/uv/install.sh | sh \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-ENV PATH="/root/.cargo/bin:/root/.local/bin:$PATH"
+WORKDIR /home/dev
 
-RUN useradd --create-home --shell /bin/bash dev
-WORKDIR /home/${USER}
-
-# Builder ステージから仮想環境をコピー
-COPY --from=builder /home/${USER}/.venv /home/${USER}/.venv
-COPY --from=builder /home/${USER} /home/${USER}
-
+# Python 仮想環境を作る
+RUN python3 -m venv .venv
 ENV PATH="/home/dev/.venv/bin:$PATH"
 
+# uv のローカル環境を使う場合はここで uv install または uv sync
+COPY pyproject.toml uv.lock* ./
+
+# アプリ本体をコピー
+COPY --from=builder /home/dev ./
+
+RUN uv sync --frozen
+
+# Postgres ドライバを追加
+RUN pip install --no-cache-dir "psycopg[binary]"
+
+RUN useradd --create-home --shell /bin/bash dev
+
 # デフォルトで${USER}ユーザーで起動
-USER ${USER}
+USER dev
+EXPOSE 8000
 
-COPY setEnv.sh /home/${USER}/setEnv.sh
-RUN chmod +x /home/${USER}/setEnv.sh
-
-CMD ["bash", "/home/${USER}/setEnv.sh"]
+# Django サーバーを起動
+CMD ["bash", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
