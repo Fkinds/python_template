@@ -236,7 +236,6 @@ provides-extras = ["dev"]
 dev = [
     { name = "mypy" },
     { name = "pre-commit" },
-    { name = "pre-commit", specifier = ">=4.3.0" },
     { name = "pytest" },
     { name = "pytest-xdist" },
     { name = "ruff" },
