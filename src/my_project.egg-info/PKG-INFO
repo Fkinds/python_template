@@ -13,6 +13,7 @@ Requires-Dist: pytest>=8.4.2
 Requires-Dist: ruff>=0.14.3
 Provides-Extra: dev
 Requires-Dist: pytest; extra == "dev"
+Requires-Dist: pytest-xdist; extra == "dev"
 Requires-Dist: ruff; extra == "dev"
 Requires-Dist: mypy; extra == "dev"
 Requires-Dist: pre-commit; extra == "dev"
