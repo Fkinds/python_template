@@ -1,71 +1,46 @@
 # ============================
-# Stage 1: Builder / CI
+# Stage 1: Builder
 # ============================
-FROM python:3.14.0-slim AS builder
+FROM python:3.14-slim AS builder
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
     curl build-essential gcc git ca-certificates \
-    && useradd --create-home --shell /bin/bash dev \
     && curl -LsSf https://astral.sh/uv/install.sh | sh \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
-ENV PATH="/root/.cargo/bin:/root/.local/bin:$PATH"
+ENV PATH="/root/.local/bin:$PATH"
 
-WORKDIR /home/dev
+WORKDIR /build
 
-# pyproject.toml と uv.lock をコピー
 COPY pyproject.toml uv.lock* ./
+RUN uv sync --frozen
 
-# アプリをコピー
 COPY . .
 
-# uv を実行して依存関係を同期
-RUN uv sync --frozen
-
-# Lint / 型チェック / テスト
-RUN uv run ruff check .
-RUN uv run mypy .
-RUN uv run pytest --numprocesses auto # テストエラーでもビルド続行したい場合
-
 # ============================
-# Stage 2: Runtime
+# Stage 2: Runtime (rootless)
 # ============================
-FROM python:3.11-slim AS runtime
+FROM python:3.14-slim AS runtime
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
-    PYTHONUNBUFFERED=1 \
-    PATH="/root/.cargo/bin:/root/.local/bin:$PATH"
+    PYTHONUNBUFFERED=1
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    curl bash ca-certificates \
-    && curl -LsSf https://astral.sh/uv/install.sh | sh \
-    && apt-get clean && rm -rf /var/lib/apt/lists/*
+RUN groupadd --gid 1000 dev \
+    && useradd --uid 1000 --gid 1000 --create-home --shell /bin/bash dev
 
-WORKDIR /home/dev
+WORKDIR /home/dev/app
 
-# Python 仮想環境を作る
-RUN python3 -m venv .venv
-ENV PATH="/home/dev/.venv/bin:$PATH"
+COPY --from=builder /root/.local/bin/uv /usr/local/bin/uv
+COPY --from=builder --chown=dev:dev /build/.venv /home/dev/app/.venv
+COPY --from=builder --chown=dev:dev /build /home/dev/app
 
-# uv のローカル環境を使う場合はここで uv install または uv sync
-COPY pyproject.toml uv.lock* ./
+ENV PATH="/home/dev/app/.venv/bin:$PATH"
 
-# アプリ本体をコピー
-COPY --from=builder /home/dev ./
-
-RUN uv sync --frozen
-
-# Postgres ドライバを追加
-RUN pip install --no-cache-dir "psycopg[binary]"
-
-RUN useradd --create-home --shell /bin/bash dev
-
-# デフォルトで${USER}ユーザーで起動
 USER dev
 EXPOSE 8000
 
-# Django サーバーを起動
-CMD ["bash", "-c", "python manage.py migrate && python manage.py runserver 0.0.0.0:8000"]
+ENTRYPOINT ["uv", "run"]
+CMD ["python", "manage.py", "runserver", "0.0.0.0:8000"]
