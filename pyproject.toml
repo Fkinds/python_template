@@ -9,10 +9,14 @@ authors = [
 readme = "README.md"
 dependencies = [
     "attrs>=25.4.0",
+    "django>=5.2",
+    "django-environ>=0.12",
+    "djangorestframework>=3.16",
     "fixit>=2.1.0",
     "import-linter>=2.5.2",
     "mypy>=1.18.2",
     "pre-commit>=4.3.0",
+    "psycopg[binary]>=3.2",
     "pydantic>=2.12.3",
     "pyrefly>=0.53.0",
     "pytest>=8.4.2",
@@ -27,15 +31,18 @@ where = ["src"]
 [dependency-groups]
 dev = [
     "pytest",
+    "pytest-django",
     "pytest-xdist",
     "ruff",
     "mypy",
+    "django-stubs",
+    "djangorestframework-stubs",
     "pre-commit",
 ]
 
 [tool.ruff]
 line-length = 79
-target-version = "py314"
+target-version = "py312"
 
 [tool.ruff.lint]
 select = [
@@ -58,6 +65,9 @@ select = [
     "PERF",   # perflint
     "RUF",    # Ruff-specific rules
 ]
+ignore = [
+    "RUF012",  # Django Meta / ModelSerializer で ClassVar 不要
+]
 
 [tool.ruff.format]
 quote-style = "double"
@@ -68,7 +78,7 @@ docstring-code-format = true
 docstring-code-line-length = "dynamic"
 
 [tool.ruff.lint.isort]
-known-first-party = ["fkinds_python"]
+known-first-party = ["config", "books"]
 force-single-line = true
 
 [tool.ruff.lint.per-file-ignores]
@@ -77,6 +87,8 @@ force-single-line = true
     "ARG",     # 未使用引数 (fixture等)
     "T20",     # print の使用を許可
 ]
+"manage.py" = ["T20"]
+"**/migrations/*.py" = ["ALL"]
 
 [tool.mypy]
 python_version = "3.14"
@@ -90,6 +102,18 @@ no_implicit_optional = true
 warn_redundant_casts = true
 warn_unused_ignores = true
 show_error_codes = true
+plugins = ["mypy_django_plugin.main"]
+
+[tool.django-stubs]
+django_settings_module = "config.settings"
+
+[[tool.mypy.overrides]]
+module = "environ"
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+DJANGO_SETTINGS_MODULE = "config.settings"
+pythonpath = ["src"]
 
 [tool.ty]
 
@@ -106,9 +130,12 @@ python_version = "3.14"
 [project.optional-dependencies]
 dev = [
     "pytest",
+    "pytest-django",
     "pytest-xdist",
     "ruff",
     "mypy",
+    "django-stubs",
+    "djangorestframework-stubs",
     "pre-commit",
 ]
 
