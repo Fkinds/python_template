@@ -102,6 +102,25 @@ jobs:
 
   functional_test:
     runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: django_db
+          POSTGRES_USER: django
+          POSTGRES_PASSWORD: django
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U django"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_DB: django_db
+      POSTGRES_USER: django
+      POSTGRES_PASSWORD: django
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v4

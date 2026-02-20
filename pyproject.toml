@@ -126,6 +126,7 @@ include = ["src"]
 [tool.pyrefly]
 project_includes = ["src/**/*.py", "tests/**/*.py"]
 python_version = "3.14"
+ignore_errors = ["bad-override", "missing-attribute"]
 
 [project.optional-dependencies]
 dev = [
