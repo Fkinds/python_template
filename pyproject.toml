@@ -92,8 +92,12 @@ warn_unused_ignores = true
 show_error_codes = true
 
 [tool.ty]
+
+[tool.ty.environment]
 python-version = "3.14"
-src = ["src"]
+
+[tool.ty.src]
+include = ["src"]
 
 [tool.pyrefly]
 project_includes = ["src/**/*.py", "tests/**/*.py"]
