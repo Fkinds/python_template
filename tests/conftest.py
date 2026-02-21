@@ -4,7 +4,7 @@ from typing import Any
 import pytest
 from rest_framework.test import APIClient
 
-from books.models import Author
+from authors.models import Author
 from books.models import Book
 
 
