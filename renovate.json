@@ -1,0 +1,66 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended",
+    ":semanticCommits",
+    "helpers:pinGitHubActionDigests"
+  ],
+  "timezone": "Asia/Tokyo",
+  "schedule": ["before 9am on monday"],
+  "prConcurrentLimit": 5,
+  "labels": ["chore"],
+  "commitMessagePrefix": "chore(deps): ",
+  "lockFileMaintenance": {
+    "enabled": true,
+    "schedule": ["before 9am on monday"]
+  },
+  "vulnerabilityAlerts": {
+    "enabled": true,
+    "labels": ["bug"],
+    "schedule": ["at any time"]
+  },
+  "packageRules": [
+    {
+      "description": "Python dependencies (minor/patch automerge)",
+      "matchManagers": ["pep621", "pip_requirements"],
+      "groupName": "python dependencies",
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true,
+      "postUpgradeTasks": {
+        "commands": ["uv lock"],
+        "fileFilters": ["uv.lock"]
+      }
+    },
+    {
+      "description": "Python dependencies (major)",
+      "matchManagers": ["pep621", "pip_requirements"],
+      "matchUpdateTypes": ["major"],
+      "automerge": false
+    },
+    {
+      "description": "npm dependencies (commitlint, husky)",
+      "matchManagers": ["npm"],
+      "groupName": "npm dependencies",
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
+    },
+    {
+      "description": "Docker image updates",
+      "matchManagers": ["dockerfile", "docker-compose"],
+      "groupName": "docker images"
+    },
+    {
+      "description": "GitHub Actions (automerge)",
+      "matchManagers": ["github-actions"],
+      "groupName": "github actions",
+      "automerge": true
+    },
+    {
+      "description": "pre-commit hooks",
+      "matchManagers": ["pre-commit"],
+      "groupName": "pre-commit hooks",
+      "matchUpdateTypes": ["minor", "patch"],
+      "automerge": true
+    }
+  ]
+}

@@ -4,7 +4,6 @@ repository:
   has_projects: false
   has_downloads: true
   default_branch: main
-
   allow_merge_commit: false
   allow_squash_merge: true
   allow_rebase_merge: true
@@ -48,5 +47,8 @@ branches:
           - functional_test
           - integration_test
           - commitlint
-      enforce_admins: false
-      restrictions: null
+      enforce_admins: true
+      required_linear_history: true
+      allow_force_pushes: false
+      allow_deletions: false
+      restrictions: false
