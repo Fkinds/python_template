@@ -20,6 +20,7 @@ venv/
 .tox/
 .mypy_cache/
 .ruff_cache/
+.libcst.caches/
 .pytest_cache/
 .hypothesis/
 .coverage
