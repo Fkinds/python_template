@@ -1,15 +1,19 @@
 services:
   backend:
     build: .
-    container_name: python_ackend
+    container_name: python_backend
     restart: always
-    volumes:
-      - backend_data:/app
     tty: true
     ports:
       - "8000:8000"
     depends_on:
-      - db
+      db:
+        condition: service_healthy
+    environment:
+      POSTGRES_HOST: db
+      POSTGRES_DB: django_db
+      POSTGRES_USER: django
+      POSTGRES_PASSWORD: django
 
   db:
     image: postgres:16
@@ -17,9 +21,17 @@ services:
     restart: always
     ports:
       - "5432:5432"
+    environment:
+      POSTGRES_DB: django_db
+      POSTGRES_USER: django
+      POSTGRES_PASSWORD: django
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U django"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
 volumes:
   postgres_data:
-  backend_data:
