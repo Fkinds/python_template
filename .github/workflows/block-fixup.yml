@@ -1,0 +1,106 @@
+# This GitHub Actions workflow checks for any 'fixup!' or 'squash!' commits in the push.
+# It ensures that no such commits are present, prompting developers to clean up their commit history
+# before merging their changes. This helps maintain a clean and meaningful commit history.
+
+name: Block 'fixup!' and 'squash!'
+
+on:
+  pull_request:
+
+permissions: write-all
+
+jobs:
+  block-fixup-and-squash:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+
+      - name: Fetch the base branch and the PR branch
+        run: |
+          # Ensure that both the base and head branches are fetched
+          git fetch origin +refs/heads/${{ github.base_ref }}:refs/remotes/origin/${{ github.base_ref }}
+          git fetch origin +refs/heads/${{ github.head_ref }}:refs/remotes/origin/${{ github.head_ref }}
+
+      - name: Block fixup and squash commits
+        id: check
+        run: |
+          # List commits between the base branch and the PR branch
+          commits=$(git log --pretty=format:"%h %s" origin/${{ github.base_ref }}..origin/${{ github.head_ref }})
+          if [ $? -ne 0 ]; then
+            echo "error::Git command failed"
+            exit 1
+          fi
+
+          echo "Checking commits"
+          while IFS= read -r commit; do
+            hash=$(echo $commit | cut -d ' ' -f 1)
+            message=$(echo $commit | cut -d ' ' -f 2-)
+
+            if [[ $message == fixup!* ]] || [[ $message == squash!* ]]; then
+              echo "error::Commit $hash starts with 'fixup!' or 'squash!': $message"
+              offending_commits="$offending_commits\n$hash: $message"
+            else
+              echo "$hash: $message"
+            fi
+
+          done <<< "$commits"
+
+          if [ -n "$offending_commits" ]; then
+            echo "commits<<EOF" >> $GITHUB_OUTPUT
+            echo -e "$offending_commits" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+            exit 1
+          else
+            echo "commits=" >> $GITHUB_OUTPUT
+            echo "All commits passed the checks!"
+          fi
+
+      - name: Manage sticky comment
+        if: always()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const header = '<!-- fixup-squash -->';
+            const commits = `${{ steps.check.outputs.commits }}`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(header));
+
+            if (commits) {
+              const body = [
+                header,
+                'Your Pull Request contains a commit that starts with `fixup!` or `squash!`.',
+                'Offending commit:',
+                '```',
+                commits,
+                '```',
+                'Please remove these commits before merging.',
+              ].join('\n');
+
+              if (existing) {
+                await github.rest.issues.updateComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  comment_id: existing.id,
+                  body,
+                });
+              } else {
+                await github.rest.issues.createComment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  issue_number: context.issue.number,
+                  body,
+                });
+              }
+            } else if (existing) {
+              await github.rest.issues.deleteComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+              });
+            }

@@ -1,0 +1,94 @@
+# This workflow will add labels to the Pull Request based on the changes
+#
+# For more information, see:
+# https://github.com/actions/labeler
+
+name: Add PR Label
+on:
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+
+jobs:
+  label:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+
+    steps:
+      - uses: actions/labeler@v6
+        with:
+          sync-labels: false
+
+  label_by_commit_message:
+    runs-on: ubuntu-latest
+    permissions: write-all
+
+    env:
+      PR_NUMBER: ${{ github.event.number }}
+
+    outputs:
+      commit_message: ${{ steps.get_commit.outputs.commit_message }}
+      label: ${{ steps.determine_label.outputs.label }}
+      label_color: ${{ steps.determine_label.outputs.label_color }}
+      label_description: ${{ steps.determine_label.outputs.label_description }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v6
+        with:
+          ref: ${{ github.event.pull_request.head.ref }}
+
+      - name: Get commit message
+        id: get_commit
+        run: |
+          COMMIT_MSG=$(git log -1 --pretty=format:"%s" ${{ github.event.pull_request.head.sha }} | sed 's/"/\\"/g' )
+          echo "$COMMIT_MSG"
+          echo "commit_message=$COMMIT_MSG" >> $GITHUB_OUTPUT
+
+      - name: Determine label
+        id: determine_label
+        run: |
+          declare -A LABELS
+          LABELS[chore]="bfd4f2 Maintenance"
+          LABELS[feature]="1a7f37 New feature"
+          LABELS[fix]="d73a4a Bug fix"
+          LABELS[refactor]="1d76db Code refactoring"
+          LABELS[revert]="141c19 Revert codes"
+          LABELS[test]="0e8a16 Tests"
+          LABELS[docs]="a259ff Documentation"
+          LABELS[ci]="e3b341 CI/CD changes"
+
+          COMMIT_TYPE=$(echo "${{ steps.get_commit.outputs.commit_message }}" | grep -oE '^(chore|feat|fix|refactor|revert|test|docs|ci)(\(|:)+' | sed 's/[()|:]//g' )
+          if [[ "$COMMIT_TYPE" == "feat" ]]; then
+            COMMIT_TYPE="feature"
+          fi
+          echo "COMMIT_TYPE: $COMMIT_TYPE"
+
+          if [[ -n "$COMMIT_TYPE" ]]; then
+            LABEL_COLOR_DESCRIPTION=${LABELS[$COMMIT_TYPE]}
+            COLOR=$(echo "$LABEL_COLOR_DESCRIPTION" | awk '{print $1}')
+            DESCRIPTION=$(echo "$LABEL_COLOR_DESCRIPTION" | cut -d' ' -f2-)
+            echo "label=$COMMIT_TYPE" >> $GITHUB_OUTPUT
+            echo "label_color=$COLOR" >> $GITHUB_OUTPUT
+            echo "label_description=$DESCRIPTION" >> $GITHUB_OUTPUT
+          else
+            echo "::warning:: No commit type found! Not possible to set a label"
+          fi
+
+      - name: Show error if PR doesn't exist
+        if: ${{ env.PR_NUMBER == '' }}
+        run: |
+          echo "::error:: No associated Pull Request found!"
+          exit 1
+
+      - name: Add label to PR
+        if: ${{ steps.determine_label.outputs.label != '' }}
+        run: |
+          gh label create "${{ steps.determine_label.outputs.label }}" --description "${{ steps.determine_label.outputs.label_description }}" --color  "${{ steps.determine_label.outputs.label_color }}" --force
+          gh pr edit ${{ env.PR_NUMBER }} --add-label "${{ steps.determine_label.outputs.label }}"
+        env:
+          GH_TOKEN: ${{ github.token }}
