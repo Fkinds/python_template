@@ -31,6 +31,22 @@ jobs:
       - run: uv run ruff check src tests
       - run: uv run ruff format --check src tests
 
+  fixit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v4
+        with:
+          enable-cache: true
+          python-version: ${{ env.PYTHON_VERSION }}
+      - uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-${{ hashFiles('uv.lock') }}
+          restore-keys: venv-${{ runner.os }}-${{ env.PYTHON_VERSION }}-
+      - run: uv sync --dev
+      - run: uv run fixit lint src tests
+
   mypy:
     runs-on: ubuntu-latest
     steps:
