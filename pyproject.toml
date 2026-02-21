@@ -90,6 +90,32 @@ force-single-line = true
 ]
 "manage.py" = ["T20"]
 "**/migrations/*.py" = ["ALL"]
+"lint_rules/**/*.py" = [
+    "N802",    # libcst visitor methods are camelCase (visit_XXX)
+    "ERA001",  # visitor comments detected as commented-out code
+]
+
+[tool.fixit]
+root = true
+python-version = "3.14"
+enable = [
+    "fixit.rules",
+    "fixit.rules.extra",
+    ".lint_rules",
+]
+disable = [
+    "fixit.rules:ReplaceUnionWithOptional",
+    "fixit.rules:RewriteToLiteral",
+    "fixit.rules.extra:UseLintFixmeComment",
+]
+
+[[tool.fixit.overrides]]
+path = "tests"
+disable = [
+    "fixit.rules:UseAssertIn",
+    "fixit.rules:UseAssertIsNotNone",
+    "fixit.rules:NoAssertTrueForComparisons",
+]
 
 [tool.mypy]
 python_version = "3.14"
