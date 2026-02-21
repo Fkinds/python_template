@@ -6,13 +6,17 @@
     "helpers:pinGitHubActionDigests"
   ],
   "timezone": "Asia/Tokyo",
-  "schedule": ["before 9am on monday"],
+  "schedule": ["before 9am every weekday"],
+  "automergeSchedule": [
+    "after 8:45am and before 5:30pm every weekday",
+    "after 5:00am and before 12:00pm on saturday and sunday"
+  ],
   "prConcurrentLimit": 5,
   "labels": ["chore"],
   "commitMessagePrefix": "chore(deps): ",
   "lockFileMaintenance": {
     "enabled": true,
-    "schedule": ["before 9am on monday"]
+    "schedule": ["before 9am every weekday"]
   },
   "vulnerabilityAlerts": {
     "enabled": true,
