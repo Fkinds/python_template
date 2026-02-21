@@ -14,7 +14,10 @@ class TestAuthorListCreate:
     # --- 正常系 ---
 
     def test_list_empty(self, api_client: APIClient, db: Any) -> None:
+        # Act
         response = api_client.get(self.endpoint)
+
+        # Assert
         assert response.status_code == status.HTTP_200_OK
         assert response.data["count"] == 0
         assert response.data["results"] == []
@@ -22,16 +25,23 @@ class TestAuthorListCreate:
     def test_list_with_data(
         self, api_client: APIClient, author: Author
     ) -> None:
+        # Arrange - author fixture
+
+        # Act
         response = api_client.get(self.endpoint)
+
+        # Assert
         assert response.status_code == status.HTTP_200_OK
         assert response.data["count"] == 1
 
     def test_create(self, api_client: APIClient, db: Any) -> None:
-        response = api_client.post(
-            self.endpoint,
-            {"name": "太宰治", "bio": "走れメロスの著者"},
-            format="json",
-        )
+        # Arrange
+        payload = {"name": "太宰治", "bio": "走れメロスの著者"}
+
+        # Act
+        response = api_client.post(self.endpoint, payload, format="json")
+
+        # Assert
         assert response.status_code == status.HTTP_201_CREATED
         assert Author.objects.count() == 1
         assert response.data["name"] == "太宰治"
@@ -40,47 +50,61 @@ class TestAuthorListCreate:
         assert "created_at" in response.data
 
     def test_create_without_bio(self, api_client: APIClient, db: Any) -> None:
-        response = api_client.post(
-            self.endpoint,
-            {"name": "芥川龍之介"},
-            format="json",
-        )
+        # Arrange
+        payload = {"name": "芥川龍之介"}
+
+        # Act
+        response = api_client.post(self.endpoint, payload, format="json")
+
+        # Assert
         assert response.status_code == status.HTTP_201_CREATED
         assert response.data["bio"] == ""
 
     # --- 異常系 ---
 
     def test_create_missing_name(self, api_client: APIClient, db: Any) -> None:
-        response = api_client.post(
-            self.endpoint,
-            {"bio": "名前なし"},
-            format="json",
-        )
+        # Arrange
+        payload = {"bio": "名前なし"}
+
+        # Act
+        response = api_client.post(self.endpoint, payload, format="json")
+
+        # Assert
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "name" in response.data
 
     def test_create_empty_name(self, api_client: APIClient, db: Any) -> None:
-        response = api_client.post(
-            self.endpoint,
-            {"name": ""},
-            format="json",
-        )
+        # Arrange
+        payload = {"name": ""}
+
+        # Act
+        response = api_client.post(self.endpoint, payload, format="json")
+
+        # Assert
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "name" in response.data
 
     def test_create_name_too_long(
         self, api_client: APIClient, db: Any
     ) -> None:
-        response = api_client.post(
-            self.endpoint,
-            {"name": "a" * 256},
-            format="json",
-        )
+        # Arrange
+        payload = {"name": "a" * 256}
+
+        # Act
+        response = api_client.post(self.endpoint, payload, format="json")
+
+        # Assert
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "name" in response.data
 
     def test_create_empty_body(self, api_client: APIClient, db: Any) -> None:
-        response = api_client.post(self.endpoint, {}, format="json")
+        # Arrange
+        payload: dict[str, str] = {}
+
+        # Act
+        response = api_client.post(self.endpoint, payload, format="json")
+
+        # Assert
         assert response.status_code == status.HTTP_400_BAD_REQUEST
 
 
@@ -91,17 +115,26 @@ class TestAuthorRetrieveUpdateDelete:
     # --- 正常系 ---
 
     def test_retrieve(self, api_client: APIClient, author: Author) -> None:
+        # Arrange - author fixture
+
+        # Act
         response = api_client.get(f"{self.endpoint}{author.pk}/")
+
+        # Assert
         assert response.status_code == status.HTTP_200_OK
         assert response.data["name"] == "夏目漱石"
         assert response.data["id"] == author.pk
 
     def test_update_put(self, api_client: APIClient, author: Author) -> None:
+        # Arrange
+        payload = {"name": "夏目漱石", "bio": "更新済み"}
+
+        # Act
         response = api_client.put(
-            f"{self.endpoint}{author.pk}/",
-            {"name": "夏目漱石", "bio": "更新済み"},
-            format="json",
+            f"{self.endpoint}{author.pk}/", payload, format="json"
         )
+
+        # Assert
         assert response.status_code == status.HTTP_200_OK
         author.refresh_from_db()
         assert author.bio == "更新済み"
@@ -109,46 +142,69 @@ class TestAuthorRetrieveUpdateDelete:
     def test_partial_update_patch(
         self, api_client: APIClient, author: Author
     ) -> None:
+        # Arrange
+        payload = {"bio": "PATCHで更新"}
+
+        # Act
         response = api_client.patch(
-            f"{self.endpoint}{author.pk}/",
-            {"bio": "PATCHで更新"},
-            format="json",
+            f"{self.endpoint}{author.pk}/", payload, format="json"
         )
+
+        # Assert
         assert response.status_code == status.HTTP_200_OK
         author.refresh_from_db()
         assert author.bio == "PATCHで更新"
         assert author.name == "夏目漱石"
 
     def test_delete(self, api_client: APIClient, author: Author) -> None:
+        # Arrange - author fixture
+
+        # Act
         response = api_client.delete(f"{self.endpoint}{author.pk}/")
+
+        # Assert
         assert response.status_code == status.HTTP_204_NO_CONTENT
         assert Author.objects.count() == 0
 
     # --- 異常系 ---
 
     def test_retrieve_not_found(self, api_client: APIClient, db: Any) -> None:
+        # Act
         response = api_client.get(f"{self.endpoint}99999/")
+
+        # Assert
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_update_not_found(self, api_client: APIClient, db: Any) -> None:
+        # Arrange
+        payload = {"name": "存在しない"}
+
+        # Act
         response = api_client.put(
-            f"{self.endpoint}99999/",
-            {"name": "存在しない"},
-            format="json",
+            f"{self.endpoint}99999/", payload, format="json"
         )
+
+        # Assert
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_delete_not_found(self, api_client: APIClient, db: Any) -> None:
+        # Act
         response = api_client.delete(f"{self.endpoint}99999/")
+
+        # Assert
         assert response.status_code == status.HTTP_404_NOT_FOUND
 
     def test_put_missing_required_field(
         self, api_client: APIClient, author: Author
     ) -> None:
+        # Arrange
+        payload = {"bio": "nameなし"}
+
+        # Act
         response = api_client.put(
-            f"{self.endpoint}{author.pk}/",
-            {"bio": "nameなし"},
-            format="json",
+            f"{self.endpoint}{author.pk}/", payload, format="json"
         )
+
+        # Assert
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "name" in response.data
