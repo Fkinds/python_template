@@ -10,6 +10,9 @@ module.exports = {
         "refactor",
         "test",
         "chore",
+        "ci",
+        "docs",
+        "revert",
       ]
     ],
     "subject-case": [2, "never", ["sentence-case", "start-case", "pascal-case", "upper-case"]],
