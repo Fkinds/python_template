@@ -1,168 +1,168 @@
+<div align="center">
+
 # fkinds-python
 
-Django REST Framework による Web API テンプレートプロジェクト。
+**Django REST Framework による Web API テンプレートプロジェクト**
 
-## 技術スタック
+[![CI](https://github.com/Fkinds/python_template/actions/workflows/ci.yml/badge.svg)](https://github.com/Fkinds/python_template/actions/workflows/ci.yml)
+[![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](https://www.python.org/)
+[![Django](https://img.shields.io/badge/Django-5.2-092E20?logo=django&logoColor=white)](https://www.djangoproject.com/)
+[![DRF](https://img.shields.io/badge/DRF-3.16-A30000?logo=django&logoColor=white)](https://www.django-rest-framework.org/)
+[![Ruff](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/ruff/main/assets/badge/v2.json)](https://github.com/astral-sh/ruff)
+[![uv](https://img.shields.io/endpoint?url=https://raw.githubusercontent.com/astral-sh/uv/main/assets/badge/v0.json)](https://github.com/astral-sh/uv)
+[![Checked with mypy](https://img.shields.io/badge/mypy-strict-blue?logo=python&logoColor=white)](http://mypy-lang.org/)
+[![pre-commit](https://img.shields.io/badge/pre--commit-enabled-brightgreen?logo=pre-commit&logoColor=white)](https://pre-commit.com/)
 
-| カテゴリ | ツール |
-|---|---|
-| 言語 | Python 3.14 |
-| フレームワーク | Django 5.2 / Django REST Framework 3.16 |
-| データベース | PostgreSQL 16 |
-| パッケージ管理 | uv |
-| リンター / フォーマッター | Ruff, Fixit (カスタムルール), import-linter |
-| 型チェック | MyPy (strict), ty |
-| テスト | pytest, pytest-xdist, Hypothesis |
-| コンテナ | Docker (マルチステージビルド) |
-| CI/CD | GitHub Actions |
-| Git フック | pre-commit, husky, commitlint |
+</div>
 
-## ディレクトリ構成
+---
+
+## Tech Stack
+
+<table>
+<tr>
+<td>
+
+| Category | Tools |
+|:--|:--|
+| **Language** | Python 3.14 |
+| **Framework** | Django 5.2 / DRF 3.16 |
+| **Database** | PostgreSQL 16 |
+| **Package Manager** | uv |
+
+</td>
+<td>
+
+| Category | Tools |
+|:--|:--|
+| **Linter / Formatter** | Ruff, Fixit, import-linter |
+| **Type Checker** | MyPy (strict), ty |
+| **Testing** | pytest, pytest-xdist, Hypothesis |
+| **Infrastructure** | Docker, GitHub Actions |
+
+</td>
+</tr>
+</table>
+
+## Project Structure
 
 ```
 .
 ├── src/
-│   ├── config/          # Django 設定 (settings, urls, wsgi, asgi)
-│   ├── authors/         # 著者アプリ
-│   └── books/           # 書籍アプリ
+│   ├── config/            # Django settings, urls, wsgi, asgi
+│   ├── authors/           # Authors app
+│   └── books/             # Books app
 ├── tests/
-│   ├── unit/            # ユニットテスト
-│   ├── functional/      # 機能テスト (DB 使用)
-│   ├── integration/     # 統合テスト
-│   └── linting/         # カスタムルールのテスト
-├── lint_rules/          # Fixit カスタムルール
-├── .github/workflows/   # CI ワークフロー
+│   ├── unit/              # Unit tests
+│   ├── functional/        # Functional tests (with DB)
+│   ├── integration/       # Integration tests
+│   └── linting/           # Custom lint rule tests
+├── lint_rules/            # Fixit custom rules
+├── .github/workflows/     # CI workflows
 └── docker-compose.yml
 ```
 
-## 環境構築
+## Getting Started
 
-### 前提条件
+### Prerequisites
 
 - Python 3.14+
 - [uv](https://docs.astral.sh/uv/) 0.10.4+
 - Docker / Docker Compose
-- Node.js (commitlint 用)
+- Node.js (for commitlint)
 
-### 1. リポジトリのクローン
+### Setup
 
 ```bash
-git clone <repository-url>
+# 1. Clone
+git clone https://github.com/Fkinds/python_template.git
 cd python_template
-```
 
-### 2. 依存パッケージのインストール
-
-```bash
+# 2. Install dependencies
 uv sync --dev
-```
 
-### 3. 環境変数の設定
+# 3. Configure environment
+cp .env.example .env   # edit .env as needed
 
-```bash
-cp .env.example .env
-```
-
-`.env` を環境に合わせて編集する。
-
-### 4. データベースの起動
-
-```bash
+# 4. Start database
 docker compose up -d db
-```
 
-PostgreSQL 16 がポート `5432` で起動する。
-
-### 5. マイグレーションの実行
-
-```bash
+# 5. Run migrations
 uv run python src/manage.py migrate
-```
 
-### 6. Git フックのセットアップ
-
-```bash
+# 6. Setup git hooks
 npm install
 uv run pre-commit install
-```
 
-### 7. 開発サーバーの起動
-
-```bash
+# 7. Start dev server
 uv run python src/manage.py runserver
 ```
 
-`http://localhost:8000` でアクセス可能。
+> `http://localhost:8000` で API にアクセス可能。
+> `docker compose up` で全サービスをまとめて起動することもできます。
 
-Docker でまとめて起動する場合:
+## Development
 
-```bash
-docker compose up
-```
-
-## よく使うコマンド
-
-### コード品質
+### Code Quality
 
 ```bash
-uv run ruff check src tests        # リント
-uv run ruff format src tests       # フォーマット
-uv run mypy src                    # 型チェック
-uv run fixit lint src tests        # カスタムルール
-uv run ty check src                # 型チェック (ty)
+uv run ruff check src tests        # Lint
+uv run ruff format src tests       # Format
+uv run mypy src                    # Type check
+uv run fixit lint src tests        # Custom rules
+uv run ty check src                # Type check (ty)
 ```
 
-### テスト
+### Testing
 
 ```bash
-uv run pytest                              # 全テスト
-uv run pytest tests/unit                   # ユニットテスト
-uv run pytest tests/functional             # 機能テスト
-uv run pytest tests/integration            # 統合テスト
-uv run pytest tests/unit --numprocesses auto  # 並列実行
+uv run pytest                              # All tests
+uv run pytest tests/unit                   # Unit tests
+uv run pytest tests/functional             # Functional tests
+uv run pytest tests/integration            # Integration tests
+uv run pytest tests/unit --numprocesses auto  # Parallel execution
 ```
 
-## Git コミット規約
+## CI Pipeline
 
-[Conventional Commits](https://www.conventionalcommits.org/ja/) に準拠する。
+GitHub Actions により `main` への push / PR で以下が並列実行されます。
+
+| Job | Description |
+|:--|:--|
+| `ruff` | Lint & format check |
+| `fixit` | Custom rule validation |
+| `mypy` | Static type check |
+| `ty` | Type check |
+| `unit_test` | Unit tests (parallel) |
+| `functional_test` | Functional tests (PostgreSQL, parallel) |
+| `integration_test` | Integration tests (sequential) |
+| `commitlint` | Commit message validation |
+
+## Git Convention
+
+[Conventional Commits](https://www.conventionalcommits.org/ja/) に準拠。
 
 ```
 <type>: <subject>
 ```
 
-使用可能な type:
+**Types:** `feat` `fix` `refactor` `test` `chore` `ci` `docs` `revert`
 
-`feat` / `fix` / `refactor` / `test` / `chore` / `ci` / `docs` / `revert`
-
-例:
-
-```
+```bash
+# Examples
 feat: add user authentication endpoint
 fix: resolve N+1 query in book list view
 ```
 
-## CI パイプライン
+## Pre-commit Hooks
 
-GitHub Actions により、`main` ブランチへの push および Pull Request で以下が並列実行される。
+コミット時に以下が自動実行されます。
 
-| ジョブ | 内容 |
-|---|---|
-| ruff | リント & フォーマットチェック |
-| fixit | カスタムルール検証 |
-| mypy | 静的型チェック |
-| ty | 型チェック |
-| unit_test | ユニットテスト (並列) |
-| functional_test | 機能テスト (PostgreSQL 使用、並列) |
-| integration_test | 統合テスト (逐次) |
-| commitlint | コミットメッセージ検証 |
-
-## pre-commit フック
-
-コミット時に以下が自動実行される。
-
-1. **Ruff** - リント & フォーマット
-2. **MyPy** - 型チェック
-3. **Fixit** - カスタムルール
-4. **pre-commit-hooks** - EOF 修正、末尾空白除去
-5. **commitlint** - コミットメッセージ検証
-6. **pytest** - 全テスト実行
+| Order | Hook | Description |
+|:--:|:--|:--|
+| 1 | **Ruff** | Lint & format |
+| 2 | **MyPy** | Type check |
+| 3 | **Fixit** | Custom rules |
+| 4 | **pre-commit-hooks** | EOF fix, trailing whitespace |
+| 5 | **commitlint** | Commit message validation |
+| 6 | **pytest** | Full test suite |
