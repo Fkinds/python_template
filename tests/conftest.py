@@ -5,7 +5,7 @@ import pytest
 from rest_framework.test import APIClient
 
 from authors.models import Author
-from books.models import Book
+from books.entities import Book
 
 
 @pytest.fixture

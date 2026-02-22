@@ -1,3 +1,6 @@
+import pytest
+from rest_framework.exceptions import ValidationError
+
 from authors.serializers import AuthorSerializer
 from books.serializers import BookDetailSerializer
 from books.serializers import BookSerializer
@@ -57,6 +60,35 @@ class TestBookSerializer:
 
         # Assert
         assert max_length == 13
+
+
+class TestBookSerializerValidateTitle:
+    """validate_title の正常系・異常系"""
+
+    def _validate(self, title: str) -> str:
+        s = BookSerializer()
+        return s.validate_title(title)
+
+    def test_happy_japanese_title(self) -> None:
+        assert self._validate("吾輩は猫である") == "吾輩は猫である"
+
+    def test_happy_english_title(self) -> None:
+        assert self._validate("Clean Code") == "Clean Code"
+
+    def test_happy_mixed_title(self) -> None:
+        assert self._validate("Python入門") == "Python入門"
+
+    def test_error_emoji_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            self._validate("テスト😀")
+
+    def test_error_script_tag_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            self._validate("<script>alert('xss')</script>")
+
+    def test_error_empty_string_rejected(self) -> None:
+        with pytest.raises(ValidationError):
+            self._validate("")
 
 
 class TestBookDetailSerializer:

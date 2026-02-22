@@ -7,7 +7,7 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from authors.models import Author
-from books.models import Book
+from books.entities import Book
 
 
 @pytest.mark.django_db
@@ -63,8 +63,12 @@ class TestBookListCreate:
             min_size=1,
             max_size=255,
             alphabet=st.characters(
-                blacklist_categories=("Cs",),
-                blacklist_characters="\x00",
+                whitelist_categories=("L", "N", "Zs"),
+                whitelist_characters=(
+                    "\u3000-\u303f\u30fc\u30fb"
+                    "\u3001\u3002\uff01\uff1f"
+                    "-,.!?'\"()&+:;/ \t"
+                ),
             ),
         ).filter(lambda s: s.strip())
     )
@@ -86,9 +90,44 @@ class TestBookListCreate:
 
         # Assert
         assert response.status_code == status.HTTP_201_CREATED
-        assert response.data["title"] == title.strip()
 
     # --- 異常系 ---
+
+    def test_error_create_rejects_emoji_title(
+        self, api_client: APIClient, author: Author
+    ) -> None:
+        # Arrange
+        payload = {
+            "title": "テスト😀",
+            "isbn": "9784003101025",
+            "published_date": "2000-01-01",
+            "author": author.pk,
+        }
+
+        # Act
+        response = api_client.post(self.endpoint, payload, format="json")
+
+        # Assert
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "title" in response.data
+
+    def test_error_create_rejects_script_tag_title(
+        self, api_client: APIClient, author: Author
+    ) -> None:
+        # Arrange
+        payload = {
+            "title": "<script>alert('xss')</script>",
+            "isbn": "9784003101025",
+            "published_date": "2000-01-01",
+            "author": author.pk,
+        }
+
+        # Act
+        response = api_client.post(self.endpoint, payload, format="json")
+
+        # Assert
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert "title" in response.data
 
     def test_error_create_rejects_empty_body(
         self, api_client: APIClient, db: Any

@@ -1,7 +1,8 @@
 from hypothesis import given
 from hypothesis import strategies as st
 
-from books.models import Book
+from books.entities import Book
+from books.entities.safe_text import SafeText
 
 
 class TestBook:
@@ -99,3 +100,24 @@ class TestBook:
 
         # Assert
         assert field.auto_now_add is True
+
+    def test_happy_title_vo_returns_safe_text(self) -> None:
+        # Arrange
+        book = Book(title="吾輩は猫である")
+
+        # Act
+        vo = book.title_vo
+
+        # Assert
+        assert isinstance(vo, SafeText)
+        assert vo.value == "吾輩は猫である"
+
+    def test_happy_title_vo_english(self) -> None:
+        # Arrange
+        book = Book(title="Clean Code")
+
+        # Act
+        vo = book.title_vo
+
+        # Assert
+        assert vo.value == "Clean Code"
