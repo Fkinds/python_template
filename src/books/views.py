@@ -11,6 +11,7 @@ from books.entities import Book
 from books.serializers import BookDetailSerializer
 from books.serializers import BookSerializer
 from notifications.domain.events import BookCreated
+from notifications.domain.results import NotificationProblem
 from notifications.infrastructure.containers.notificaton import (
     get_book_created_use_case,
 )
@@ -41,8 +42,11 @@ class BookViewSet(viewsets.ModelViewSet[Book]):
             isbn=instance.isbn,
             author_name=instance.author.name,
         )
-        try:
-            use_case = get_book_created_use_case()
-            use_case.execute(event=event)
-        except Exception:
-            logger.exception("通知送信に失敗しました")
+        result = get_book_created_use_case().execute(
+            event=event,
+        )
+        if isinstance(result, NotificationProblem):
+            logger.warning(
+                "通知送信に失敗しました: %s",
+                result.detail,
+            )

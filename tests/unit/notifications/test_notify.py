@@ -1,9 +1,12 @@
-import pytest
+from http import HTTPStatus
+
 from hypothesis import given
 from hypothesis import strategies as st
 
 from notifications.domain.events import AuthorCreated
 from notifications.domain.events import BookCreated
+from notifications.domain.results import NotificationProblem
+from notifications.domain.results import NotificationSuccess
 from notifications.infrastructure.adapters.fake import FakeNotifier
 from notifications.usecases.notify import NotifyAuthorCreatedUseCaseImpl
 from notifications.usecases.notify import NotifyBookCreatedUseCaseImpl
@@ -36,9 +39,10 @@ class TestNotifyBookCreatedUseCaseImpl:
         )
 
         # Act
-        use_case.execute(event=event)
+        result = use_case.execute(event=event)
 
         # Assert
+        assert isinstance(result, NotificationSuccess)
         assert len(fake.messages) == 1
         (msg,) = fake.messages
         assert "吾輩は猫である" in msg
@@ -66,17 +70,18 @@ class TestNotifyBookCreatedUseCaseImpl:
         )
 
         # Act
-        use_case.execute(event=event)
+        result = use_case.execute(event=event)
 
         # Assert
+        assert isinstance(result, NotificationSuccess)
         (msg,) = fake.messages
         assert title in msg
         assert author_name in msg
 
-    def test_error_propagates_notifier_exception(
+    def test_error_returns_problem_on_notifier_failure(
         self,
     ) -> None:
-        """Notifier の例外がそのまま伝播すること."""
+        """Notifier 失敗時に NotificationProblem が返ること."""
         # Arrange
         use_case = NotifyBookCreatedUseCaseImpl(
             notifier=_FailingNotifier(),
@@ -87,9 +92,13 @@ class TestNotifyBookCreatedUseCaseImpl:
             author_name="テスト著者",
         )
 
-        # Act & Assert
-        with pytest.raises(RuntimeError, match="送信失敗"):
-            use_case.execute(event=event)
+        # Act
+        result = use_case.execute(event=event)
+
+        # Assert
+        assert isinstance(result, NotificationProblem)
+        assert result.status == HTTPStatus.BAD_GATEWAY
+        assert "テスト" in result.detail
 
 
 class TestNotifyAuthorCreatedUseCaseImpl:
@@ -103,9 +112,10 @@ class TestNotifyAuthorCreatedUseCaseImpl:
         event = AuthorCreated(name="太宰治")
 
         # Act
-        use_case.execute(event=event)
+        result = use_case.execute(event=event)
 
         # Assert
+        assert isinstance(result, NotificationSuccess)
         assert len(fake.messages) == 1
         (msg,) = fake.messages
         assert "太宰治" in msg
@@ -119,22 +129,27 @@ class TestNotifyAuthorCreatedUseCaseImpl:
         event = AuthorCreated(name=name)
 
         # Act
-        use_case.execute(event=event)
+        result = use_case.execute(event=event)
 
         # Assert
+        assert isinstance(result, NotificationSuccess)
         (msg,) = fake.messages
         assert name in msg
 
-    def test_error_propagates_notifier_exception(
+    def test_error_returns_problem_on_notifier_failure(
         self,
     ) -> None:
-        """Notifier の例外がそのまま伝播すること."""
+        """Notifier 失敗時に NotificationProblem が返ること."""
         # Arrange
         use_case = NotifyAuthorCreatedUseCaseImpl(
             notifier=_FailingNotifier(),
         )
         event = AuthorCreated(name="テスト著者")
 
-        # Act & Assert
-        with pytest.raises(RuntimeError, match="送信失敗"):
-            use_case.execute(event=event)
+        # Act
+        result = use_case.execute(event=event)
+
+        # Assert
+        assert isinstance(result, NotificationProblem)
+        assert result.status == HTTPStatus.BAD_GATEWAY
+        assert "テスト著者" in result.detail
