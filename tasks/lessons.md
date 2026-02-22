@@ -7,7 +7,17 @@
 
 ## Rules Derived from Corrections
 
-_No entries yet._
+### 2026-02-22: entrypoint.sh は不要、docker-compose に直接書く
+
+**What happened**: バケット初期化・migrate・runserver を
+`scripts/entrypoint.sh` に書こうとした。
+**Root cause**: 常時起動でないコマンドをエントリポイントに
+含める必要はない。初回セットアップは手動実行で十分。
+**Rule**: 常時実行しないコマンド（migrate, ensure_bucket 等）
+はエントリポイントに含めず、手動コマンドとして提供する。
+シェルスクリプトを作る前に「docker-compose の command で
+済むか」「そもそも自動実行が必要か」を確認する。
+**Related CLAUDE.md rule**: N/A
 
 <!--
 ## Entry Template

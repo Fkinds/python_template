@@ -2,7 +2,7 @@
 
 # fkinds-python
 
-**Django REST Framework による Web API テンプレートプロジェクト**
+**Web API template project powered by Django REST Framework**
 
 [![CI](https://github.com/Fkinds/python_template/actions/workflows/ci.yml/badge.svg)](https://github.com/Fkinds/python_template/actions/workflows/ci.yml)
 [![Python](https://img.shields.io/badge/Python-3.14-3776AB?logo=python&logoColor=white)](https://www.python.org/)
@@ -28,6 +28,7 @@
 | **Language** | Python 3.14 |
 | **Framework** | Django 5.2 / DRF 3.16 |
 | **Database** | PostgreSQL 16 |
+| **Object Storage** | RustFS (S3-compatible) |
 | **Package Manager** | uv |
 
 </td>
@@ -84,11 +85,12 @@ uv sync --dev
 # 3. Configure environment
 cp .env.example .env   # edit .env as needed
 
-# 4. Start database
-docker compose up -d db
+# 4. Start database & object storage
+docker compose up -d db rustfs
 
-# 5. Run migrations
+# 5. Run migrations & create S3 bucket
 uv run python src/manage.py migrate
+uv run python manage.py ensure_bucket
 
 # 6. Setup git hooks
 npm install
@@ -98,8 +100,28 @@ uv run pre-commit install
 uv run python src/manage.py runserver
 ```
 
-> `http://localhost:8000` で API にアクセス可能。
-> `docker compose up` で全サービスをまとめて起動することもできます。
+> Access the API at `http://localhost:8000`.
+> You can also run `docker compose up` to start all services at once.
+
+## Object Storage (RustFS)
+
+[RustFS](https://rustfs.com/) provides S3-compatible object storage
+for file uploads (e.g. book cover images).
+
+| Service | URL | Description |
+|:--|:--|:--|
+| S3 API | `http://localhost:9000` | django-storages endpoint |
+| Web Console | `http://localhost:9001` | Browser admin UI |
+
+**Default credentials:** `rustfsadmin` / `rustfsadmin`
+
+```bash
+# Create bucket (first time only)
+uv run python manage.py ensure_bucket
+
+# Start RustFS standalone
+docker compose up -d rustfs
+```
 
 ## Development
 
@@ -125,7 +147,7 @@ uv run pytest tests/unit --numprocesses auto  # Parallel execution
 
 ## CI Pipeline
 
-GitHub Actions により `main` への push / PR で以下が並列実行されます。
+The following jobs run in parallel on push / PR to `main` via GitHub Actions.
 
 | Job | Description |
 |:--|:--|
@@ -140,7 +162,7 @@ GitHub Actions により `main` への push / PR で以下が並列実行され�
 
 ## Git Convention
 
-[Conventional Commits](https://www.conventionalcommits.org/ja/) に準拠。
+Follows [Conventional Commits](https://www.conventionalcommits.org/).
 
 ```
 <type>: <subject>
@@ -156,7 +178,7 @@ fix: resolve N+1 query in book list view
 
 ## Pre-commit Hooks
 
-コミット時に以下が自動実行されます。
+The following hooks run automatically on each commit.
 
 | Order | Hook | Description |
 |:--:|:--|:--|
