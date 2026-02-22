@@ -39,6 +39,9 @@ wheels/
 # Node (if using frontend)
 node_modules/
 
+# Task management (local only)
+tasks/
+
 # OS
 .DS_Store
 Thumbs.db
