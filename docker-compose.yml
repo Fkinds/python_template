@@ -12,6 +12,7 @@ services:
       rustfs:
         condition: service_healthy
     environment:
+      DJANGO_SETTINGS_MODULE: config.settings.prod
       POSTGRES_HOST: db
       POSTGRES_DB: django_db
       POSTGRES_USER: django

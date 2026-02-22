@@ -2,20 +2,11 @@ from pathlib import Path
 
 import environ
 
-env = environ.Env(
-    DEBUG=(bool, False),
-    ALLOWED_HOSTS=(list, ["*"]),
-)
+env = environ.Env()
 
-BASE_DIR = Path(__file__).resolve().parent.parent.parent
+BASE_DIR = Path(__file__).resolve().parent.parent.parent.parent
 
 environ.Env.read_env(BASE_DIR / ".env", overwrite=False)
-
-SECRET_KEY = env("SECRET_KEY", default="django-insecure-change-me")
-
-DEBUG = env("DEBUG")
-
-ALLOWED_HOSTS: list[str] = env("ALLOWED_HOSTS")
 
 INSTALLED_APPS = [
     "django.contrib.admin",
@@ -44,7 +35,7 @@ ROOT_URLCONF = "config.urls"
 
 TEMPLATES = [
     {
-        "BACKEND": "django.template.backends.django.DjangoTemplates",
+        "BACKEND": ("django.template.backends.django.DjangoTemplates"),
         "DIRS": [],
         "APP_DIRS": True,
         "OPTIONS": {
@@ -110,7 +101,7 @@ S3_BUCKET_NAME: str = env(
 
 STORAGES = {
     "default": {
-        "BACKEND": ("storages.backends.s3.S3Storage"),
+        "BACKEND": "storages.backends.s3.S3Storage",
         "OPTIONS": {
             "endpoint_url": S3_ENDPOINT_URL,
             "access_key": S3_ACCESS_KEY,
