@@ -1,6 +1,6 @@
 from rest_framework import viewsets
 
-from books.models import Book
+from books.entities import Book
 from books.serializers import BookDetailSerializer
 from books.serializers import BookSerializer
 

@@ -1,19 +1,13 @@
-from django.db import models
+from books.entities import ISBN_LENGTH
+from books.entities import TITLE_MAX_LENGTH
+from books.entities import TITLE_MIN_LENGTH
+from books.entities import Book
+from books.entities.safe_text import SafeText
 
-
-class Book(models.Model):
-    title = models.CharField(max_length=255)
-    isbn = models.CharField(max_length=13, unique=True)
-    published_date = models.DateField()
-    author = models.ForeignKey(
-        "authors.Author",
-        on_delete=models.CASCADE,
-        related_name="books",
-    )
-    created_at = models.DateTimeField(auto_now_add=True)
-
-    class Meta:
-        ordering = ["-published_date"]
-
-    def __str__(self) -> str:
-        return self.title
+__all__ = [
+    "ISBN_LENGTH",
+    "TITLE_MAX_LENGTH",
+    "TITLE_MIN_LENGTH",
+    "Book",
+    "SafeText",
+]

@@ -1,7 +1,10 @@
 from rest_framework import serializers
 
 from authors.serializers import AuthorSerializer
-from books.models import Book
+from books.entities import TITLE_MAX_LENGTH
+from books.entities import TITLE_MIN_LENGTH
+from books.entities import Book
+from books.entities.safe_text import SafeText
 
 
 class BookSerializer(serializers.ModelSerializer[Book]):
@@ -16,6 +19,17 @@ class BookSerializer(serializers.ModelSerializer[Book]):
             "created_at",
         ]
         read_only_fields = ["id", "created_at"]
+
+    def validate_title(self, value: str) -> str:
+        try:
+            SafeText(
+                value=value,
+                min_length=TITLE_MIN_LENGTH,
+                max_length=TITLE_MAX_LENGTH,
+            )
+        except ValueError as e:
+            raise serializers.ValidationError(str(e)) from e
+        return value
 
 
 class BookDetailSerializer(serializers.ModelSerializer[Book]):
