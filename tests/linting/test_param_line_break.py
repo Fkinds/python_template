@@ -30,10 +30,7 @@ class TestParamLineBreakValid:
         assert _lint(code, config) == []
 
     def test_self_and_one_param_one_line(self, config: Config) -> None:
-        code = (
-            "class Foo:\n"
-            "    def method(self, x: int) -> None: ...\n"
-        )
+        code = "class Foo:\n    def method(self, x: int) -> None: ...\n"
         assert _lint(code, config) == []
 
     def test_cls_and_one_param_one_line(self, config: Config) -> None:
@@ -45,12 +42,7 @@ class TestParamLineBreakValid:
         assert _lint(code, config) == []
 
     def test_multiple_params_with_line_breaks(self, config: Config) -> None:
-        code = (
-            "def f(\n"
-            "    x: int,\n"
-            "    y: int,\n"
-            ") -> None: ...\n"
-        )
+        code = "def f(\n    x: int,\n    y: int,\n) -> None: ...\n"
         assert _lint(code, config) == []
 
     def test_self_multi_params_with_breaks(self, config: Config) -> None:
@@ -69,10 +61,7 @@ class TestParamLineBreakValid:
         assert _lint(code, config) == []
 
     def test_only_self(self, config: Config) -> None:
-        code = (
-            "class Foo:\n"
-            "    def method(self) -> None: ...\n"
-        )
+        code = "class Foo:\n    def method(self) -> None: ...\n"
         assert _lint(code, config) == []
 
     def test_star_args_single(self, config: Config) -> None:
@@ -88,33 +77,19 @@ class TestParamLineBreakValid:
         assert _lint(code, config) == []
 
     def test_self_and_star_args(self, config: Config) -> None:
-        code = (
-            "class Foo:\n"
-            "    def method(self, *args: int) -> None: ...\n"
-        )
+        code = "class Foo:\n    def method(self, *args: int) -> None: ...\n"
         assert _lint(code, config) == []
 
     def test_multiple_with_star_args_line_breaks(self, config: Config) -> None:
-        code = (
-            "def f(\n"
-            "    x: int,\n"
-            "    *args: int,\n"
-            ") -> None: ...\n"
-        )
+        code = "def f(\n    x: int,\n    *args: int,\n) -> None: ...\n"
         assert _lint(code, config) == []
 
     def test_self_and_kwargs_one_line(self, config: Config) -> None:
-        code = (
-            "class Foo:\n"
-            "    def method(self, **kwargs: int) -> None: ...\n"
-        )
+        code = "class Foo:\n    def method(self, **kwargs: int) -> None: ...\n"
         assert _lint(code, config) == []
 
     def test_self_and_kwonly_one_line(self, config: Config) -> None:
-        code = (
-            "class Foo:\n"
-            "    def method(self, *, x: int) -> None: ...\n"
-        )
+        code = "class Foo:\n    def method(self, *, x: int) -> None: ...\n"
         assert _lint(code, config) == []
 
     def test_posonly_single_param(self, config: Config) -> None:
@@ -127,20 +102,13 @@ class TestParamLineBreakValid:
 
     def test_only_self_with_line_break(self, config: Config) -> None:
         code = (
-            "class Foo:\n"
-            "    def method(\n"
-            "        self,\n"
-            "    ) -> None: ...\n"
+            "class Foo:\n    def method(\n        self,\n    ) -> None: ...\n"
         )
         assert _lint(code, config) == []
 
     def test_three_params_with_line_breaks(self, config: Config) -> None:
         code = (
-            "def f(\n"
-            "    x: int,\n"
-            "    y: int,\n"
-            "    z: int,\n"
-            ") -> None: ...\n"
+            "def f(\n    x: int,\n    y: int,\n    z: int,\n) -> None: ...\n"
         )
         assert _lint(code, config) == []
 
@@ -149,11 +117,7 @@ class TestParamLineBreakInvalid:
     """改行ルールに違反しているケースを検出する"""
 
     def test_single_param_with_line_break(self, config: Config) -> None:
-        code = (
-            "def f(\n"
-            "    x: int,\n"
-            ") -> None: ...\n"
-        )
+        code = "def f(\n    x: int,\n) -> None: ...\n"
         messages = _lint(code, config)
         assert len(messages) == 1
         assert "on one line" in messages[0].lower()
@@ -178,8 +142,7 @@ class TestParamLineBreakInvalid:
 
     def test_self_multi_params_no_break(self, config: Config) -> None:
         code = (
-            "class Foo:\n"
-            "    def method(self, x: int, y: int) -> None: ...\n"
+            "class Foo:\n    def method(self, x: int, y: int) -> None: ...\n"
         )
         messages = _lint(code, config)
         assert len(messages) == 1
@@ -209,32 +172,19 @@ class TestParamLineBreakInvalid:
         assert "on one line" in messages[0].lower()
 
     def test_star_args_only_with_line_break(self, config: Config) -> None:
-        code = (
-            "def f(\n"
-            "    *args: int,\n"
-            ") -> None: ...\n"
-        )
+        code = "def f(\n    *args: int,\n) -> None: ...\n"
         messages = _lint(code, config)
         assert len(messages) == 1
         assert "on one line" in messages[0].lower()
 
     def test_kwargs_only_with_line_break(self, config: Config) -> None:
-        code = (
-            "def f(\n"
-            "    **kwargs: int,\n"
-            ") -> None: ...\n"
-        )
+        code = "def f(\n    **kwargs: int,\n) -> None: ...\n"
         messages = _lint(code, config)
         assert len(messages) == 1
         assert "on one line" in messages[0].lower()
 
     def test_kwonly_single_with_line_break(self, config: Config) -> None:
-        code = (
-            "def f(\n"
-            "    *,\n"
-            "    x: int,\n"
-            ") -> None: ...\n"
-        )
+        code = "def f(\n    *,\n    x: int,\n) -> None: ...\n"
         messages = _lint(code, config)
         assert len(messages) == 1
         assert "on one line" in messages[0].lower()
