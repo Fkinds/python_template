@@ -34,7 +34,7 @@ repos:
     hooks:
       - id: commitlint
         stages: [commit-msg]
-        args: [--config, commitlint.config.js]
+        args: [--config, .commitlint.config.js]
 
   - repo: local
     hooks:
