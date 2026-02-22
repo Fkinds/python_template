@@ -12,7 +12,10 @@ def config() -> Config:
     return Config(path=Path("test.py"))
 
 
-def _lint(source: str, config: Config) -> list[str]:
+def _lint(
+    source: str,
+    config: Config,
+) -> list[str]:
     runner = LintRunner(config.path, source.encode())
     rule = NoClassPattern()
     reports = list(runner.collect_violations([rule], config))
@@ -136,9 +139,7 @@ class TestNoClassPatternInvalid:
         messages = _lint(code, config)
         assert len(messages) == 1
 
-    def test_multiple_class_patterns_in_same_match(
-        self, config: Config
-    ) -> None:
+    def test_multi_class_patterns_same_match(self, config: Config) -> None:
         code = (
             "match shape:\n"
             "    case Circle(r):\n"

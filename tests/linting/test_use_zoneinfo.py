@@ -12,7 +12,10 @@ def config() -> Config:
     return Config(path=Path("test.py"))
 
 
-def _lint(source: str, config: Config) -> list[str]:
+def _lint(
+    source: str,
+    config: Config,
+) -> list[str]:
     runner = LintRunner(config.path, source.encode())
     rule = UseZoneInfo()
     reports = list(runner.collect_violations([rule], config))
@@ -39,14 +42,10 @@ class TestUseZoneInfoValid:
     def test_from_datetime_import_is_allowed(self, config: Config) -> None:
         assert _lint("from datetime import datetime\n", config) == []
 
-    def test_from_datetime_import_timedelta_is_allowed(
-        self, config: Config
-    ) -> None:
+    def test_datetime_timedelta_allowed(self, config: Config) -> None:
         assert _lint("from datetime import timedelta\n", config) == []
 
-    def test_from_dateutil_import_parser_is_allowed(
-        self, config: Config
-    ) -> None:
+    def test_dateutil_parser_allowed(self, config: Config) -> None:
         assert _lint("from dateutil import parser\n", config) == []
 
     def test_import_dateutil_is_allowed(self, config: Config) -> None:

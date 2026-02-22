@@ -9,7 +9,9 @@ _allowed_text_validator = RegexValidator(
 
 
 def _validate_length(
-    instance: "SafeText", _attribute: attrs.Attribute[str], val: str
+    instance: "SafeText",
+    _attribute: attrs.Attribute[str],
+    val: str,
 ) -> None:
     if len(val) < instance.min_length:
         msg = f"{instance.min_length}文字以上で入力してください"
@@ -20,7 +22,9 @@ def _validate_length(
 
 
 def _validate_safe_chars(
-    _instance: "SafeText", _attribute: attrs.Attribute[str], val: str
+    _instance: "SafeText",
+    _attribute: attrs.Attribute[str],
+    val: str,
 ) -> None:
     try:
         _allowed_text_validator(val)
