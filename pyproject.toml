@@ -20,6 +20,7 @@ dependencies = [
     "pydantic>=2.12.3",
     "pyrefly>=0.53.0",
     "pytest>=8.4.2",
+    "pytest-cov>=7.0.0",
     "ruff>=0.14.3",
     "ty>=0.0.17",
     "uv>=0.10.4",
@@ -141,7 +142,23 @@ ignore_missing_imports = true
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings"
 pythonpath = ["src"]
-addopts = "--import-mode=importlib"
+addopts = "--import-mode=importlib --cov=src --cov-report=term-missing"
+
+[tool.coverage.run]
+source = ["src"]
+omit = [
+    "*/migrations/*",
+    "*/wsgi.py",
+    "*/asgi.py",
+    "*/manage.py",
+]
+
+[tool.coverage.report]
+show_missing = true
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+]
 
 [tool.ty]
 
