@@ -70,26 +70,28 @@ class TestBookSerializerValidateTitle:
         s = BookSerializer()
         return s.validate_title(title)
 
-    def test_happy_japanese_title(self) -> None:
-        assert self._validate("吾輩は猫である") == "吾輩は猫である"
+    @pytest.mark.parametrize(
+        "title",
+        ["吾輩は猫である", "Clean Code", "Python入門"],
+        ids=["japanese", "english", "mixed"],
+    )
+    def test_happy_valid_title_accepted(self, title: str) -> None:
+        """正常系: 有効なタイトルが受け入れられること."""
+        assert self._validate(title) == title
 
-    def test_happy_english_title(self) -> None:
-        assert self._validate("Clean Code") == "Clean Code"
-
-    def test_happy_mixed_title(self) -> None:
-        assert self._validate("Python入門") == "Python入門"
-
-    def test_error_emoji_rejected(self) -> None:
+    @pytest.mark.parametrize(
+        "title",
+        [
+            "テスト😀",
+            "<script>alert('xss')</script>",
+            "",
+        ],
+        ids=["emoji", "script_tag", "empty"],
+    )
+    def test_error_invalid_title_rejected(self, title: str) -> None:
+        """異常系: 不正なタイトルが拒否されること."""
         with pytest.raises(ValidationError):
-            self._validate("テスト😀")
-
-    def test_error_script_tag_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            self._validate("<script>alert('xss')</script>")
-
-    def test_error_empty_string_rejected(self) -> None:
-        with pytest.raises(ValidationError):
-            self._validate("")
+            self._validate(title)
 
 
 class TestBookDetailSerializer:

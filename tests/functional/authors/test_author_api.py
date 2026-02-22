@@ -204,37 +204,34 @@ class TestAuthorRetrieveUpdateDelete:
 
     # --- 異常系 ---
 
-    def test_error_retrieve_returns_404_for_missing_author(
-        self, api_client: APIClient, db: Any
+    @pytest.mark.parametrize(
+        "method",
+        ["get", "put", "patch", "delete"],
+    )
+    def test_error_returns_404_for_missing_author(
+        self,
+        api_client: APIClient,
+        db: Any,
+        method: str,
     ) -> None:
-        # Act
-        response = api_client.get(f"{self.endpoint}99999/")
-
-        # Assert
-        assert response.status_code == status.HTTP_404_NOT_FOUND
-
-    def test_error_put_returns_404_for_missing_author(
-        self, api_client: APIClient, db: Any
-    ) -> None:
+        """異常系: 存在しない著者に対して 404 を返すこと."""
         # Arrange
+        url = f"{self.endpoint}99999/"
         payload = {"name": "存在しない"}
 
         # Act
-        response = api_client.put(
-            f"{self.endpoint}99999/", payload, format="json"
-        )
+        match method:
+            case "get":
+                response = api_client.get(url)
+            case "put":
+                response = api_client.put(url, payload, format="json")
+            case "patch":
+                response = api_client.patch(url, payload, format="json")
+            case "delete":
+                response = api_client.delete(url)
 
         # Assert
-        assert response.status_code == status.HTTP_404_NOT_FOUND
-
-    def test_error_delete_returns_404_for_missing_author(
-        self, api_client: APIClient, db: Any
-    ) -> None:
-        # Act
-        response = api_client.delete(f"{self.endpoint}99999/")
-
-        # Assert
-        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.status_code == (status.HTTP_404_NOT_FOUND)
 
     def test_error_put_rejects_missing_name(
         self, api_client: APIClient, author: Author

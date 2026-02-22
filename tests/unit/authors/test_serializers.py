@@ -1,3 +1,4 @@
+import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
@@ -99,16 +100,21 @@ class TestAuthorSerializer:
 
     # --- 異常系 ---
 
-    def test_error_rejects_whitespace_only_name(self) -> None:
-        for ws in (" ", "\t", "\r", "\n", "  \t\n"):
-            # Arrange
-            data = {"name": ws}
+    @pytest.mark.parametrize(
+        "ws",
+        [" ", "\t", "\r", "\n", "  \t\n"],
+        ids=["space", "tab", "cr", "lf", "mixed"],
+    )
+    def test_error_rejects_whitespace_only_name(self, ws: str) -> None:
+        """異常系: 空白のみの名前が拒否されること."""
+        # Arrange
+        data = {"name": ws}
 
-            # Act
-            s = AuthorSerializer(data=data)
+        # Act
+        s = AuthorSerializer(data=data)
 
-            # Assert
-            assert not s.is_valid()
+        # Assert
+        assert not s.is_valid()
 
     def test_error_rejects_missing_name(self) -> None:
         # Arrange
@@ -151,7 +157,7 @@ class TestAuthorSerializer:
                 blacklist_categories=("Cs",),
                 blacklist_characters="\x00",
             ),
-        )
+        ).filter(lambda s: len(s.strip()) > 255)
     )
     def test_error_rejects_long_name(self, name: str) -> None:
         # Arrange
