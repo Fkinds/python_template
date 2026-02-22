@@ -138,7 +138,7 @@ show_error_codes = true
 plugins = ["mypy_django_plugin.main"]
 
 [tool.django-stubs]
-django_settings_module = "config.settings"
+django_settings_module = "config.settings.dev"
 
 [[tool.mypy.overrides]]
 module = "environ"
@@ -149,7 +149,7 @@ module = ["storages.*", "boto3.*", "botocore.*", "moto.*"]
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]
-DJANGO_SETTINGS_MODULE = "config.settings"
+DJANGO_SETTINGS_MODULE = "config.settings.dev"
 pythonpath = ["src"]
 addopts = "--import-mode=importlib --cov=src --cov-report=term-missing"
 
