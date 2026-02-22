@@ -68,7 +68,7 @@ jobs:
       - uses: ./.github/actions/setup-python-env
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - run: uv run pytest tests/unit --numprocesses auto
+      - run: uv run pytest tests/unit --numprocesses auto --no-cov
 
   functional_test:
     runs-on: ubuntu-latest
@@ -96,7 +96,7 @@ jobs:
       - uses: ./.github/actions/setup-python-env
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - run: uv run pytest tests/functional --numprocesses auto
+      - run: uv run pytest tests/functional --numprocesses auto --no-cov
 
   integration_test:
     runs-on: ubuntu-latest
@@ -105,7 +105,40 @@ jobs:
       - uses: ./.github/actions/setup-python-env
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - run: uv run pytest tests/integration --maxfail=1 --disable-warnings -q
+      - run: uv run pytest tests/integration --maxfail=1 --disable-warnings -q --no-cov
+
+  coverage:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_DB: django_db
+          POSTGRES_USER: django
+          POSTGRES_PASSWORD: django
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd="pg_isready -U django"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=5
+    env:
+      POSTGRES_HOST: localhost
+      POSTGRES_DB: django_db
+      POSTGRES_USER: django
+      POSTGRES_PASSWORD: django
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: uv run pytest --cov-fail-under=80 --cov-report=xml:coverage.xml
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: coverage.xml
 
   commitlint:
     runs-on: ubuntu-latest
