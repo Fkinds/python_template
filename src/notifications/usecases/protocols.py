@@ -3,6 +3,7 @@ from typing import runtime_checkable
 
 from notifications.domain.events import AuthorCreated
 from notifications.domain.events import BookCreated
+from notifications.domain.results import NotificationResult
 
 
 @runtime_checkable
@@ -18,7 +19,7 @@ class Notifier(Protocol):
 class NotifyBookCreatedUseCase(Protocol):
     """本作成通知ユースケースのポート."""
 
-    def execute(self, event: BookCreated) -> None:
+    def execute(self, event: BookCreated) -> NotificationResult:
         """本作成イベントの通知を実行する."""
         ...
 
@@ -27,6 +28,6 @@ class NotifyBookCreatedUseCase(Protocol):
 class NotifyAuthorCreatedUseCase(Protocol):
     """著者作成通知ユースケースのポート."""
 
-    def execute(self, event: AuthorCreated) -> None:
+    def execute(self, event: AuthorCreated) -> NotificationResult:
         """著者作成イベントの通知を実行する."""
         ...

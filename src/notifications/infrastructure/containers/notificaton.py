@@ -38,6 +38,18 @@ class NotificationModule(injector.Module):
                 to=ConsoleNotifier(),
             )
 
+    @injector.provider
+    def _book_uc(self, notifier: Notifier) -> NotifyBookCreatedUseCase:
+        return NotifyBookCreatedUseCaseImpl(
+            notifier=notifier,
+        )
+
+    @injector.provider
+    def _author_uc(self, notifier: Notifier) -> NotifyAuthorCreatedUseCase:
+        return NotifyAuthorCreatedUseCaseImpl(
+            notifier=notifier,
+        )
+
 
 def _build_container() -> injector.Injector:
     return injector.Injector([NotificationModule()])
@@ -63,13 +75,21 @@ def override_notifier(notifier: Notifier | None) -> None:
 
 def get_book_created_use_case() -> NotifyBookCreatedUseCase:
     """本作成通知ユースケースを取得するヘルパー."""
-    return NotifyBookCreatedUseCaseImpl(
-        notifier=get_notifier(),
+    if _notifier_override is not None:
+        return NotifyBookCreatedUseCaseImpl(
+            notifier=_notifier_override,
+        )
+    return _container.get(
+        NotifyBookCreatedUseCase,  # type: ignore[type-abstract]
     )
 
 
 def get_author_created_use_case() -> NotifyAuthorCreatedUseCase:
     """著者作成通知ユースケースを取得するヘルパー."""
-    return NotifyAuthorCreatedUseCaseImpl(
-        notifier=get_notifier(),
+    if _notifier_override is not None:
+        return NotifyAuthorCreatedUseCaseImpl(
+            notifier=_notifier_override,
+        )
+    return _container.get(
+        NotifyAuthorCreatedUseCase,  # type: ignore[type-abstract]
     )

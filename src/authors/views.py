@@ -7,6 +7,7 @@ from rest_framework.serializers import BaseSerializer
 from authors.models import Author
 from authors.serializers import AuthorSerializer
 from notifications.domain.events import AuthorCreated
+from notifications.domain.results import NotificationProblem
 from notifications.infrastructure.containers.notificaton import (
     get_author_created_use_case,
 )
@@ -22,8 +23,11 @@ class AuthorViewSet(viewsets.ModelViewSet[Author]):
         """著者の作成時に通知を送信する."""
         instance = serializer.save()
         event = AuthorCreated(name=instance.name)
-        try:
-            use_case = get_author_created_use_case()
-            use_case.execute(event=event)
-        except Exception:
-            logger.exception("通知送信に失敗しました")
+        result = get_author_created_use_case().execute(
+            event=event,
+        )
+        if isinstance(result, NotificationProblem):
+            logger.warning(
+                "通知送信に失敗しました: %s",
+                result.detail,
+            )
