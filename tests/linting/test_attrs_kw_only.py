@@ -12,7 +12,10 @@ def config() -> Config:
     return Config(path=Path("test.py"))
 
 
-def _lint(source: str, config: Config) -> list[str]:
+def _lint(
+    source: str,
+    config: Config,
+) -> list[str]:
     runner = LintRunner(config.path, source.encode())
     rule = AttrsKwOnly()
     reports = list(runner.collect_violations([rule], config))
@@ -87,9 +90,7 @@ class TestAttrsKwOnlyInvalid:
         messages = _lint(code, config)
         assert len(messages) == 1
 
-    def test_frozen_with_other_args_but_no_kw_only(
-        self, config: Config
-    ) -> None:
+    def test_frozen_other_args_no_kw_only(self, config: Config) -> None:
         code = (
             "import attrs\n"
             "@attrs.frozen(slots=True)\n"

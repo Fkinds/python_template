@@ -12,7 +12,10 @@ def config() -> Config:
     return Config(path=Path("test.py"))
 
 
-def _lint(source: str, config: Config) -> list[str]:
+def _lint(
+    source: str,
+    config: Config,
+) -> list[str]:
     runner = LintRunner(config.path, source.encode())
     rule = NoPositionalArgs()
     reports = list(runner.collect_violations([rule], config))
@@ -74,9 +77,7 @@ class TestNoPositionalArgsValid:
 class TestNoPositionalArgsInvalid:
     """位置引数を使っているケースを検出する"""
 
-    def test_first_party_class_with_positional_arg(
-        self, config: Config
-    ) -> None:
+    def test_first_party_positional_arg(self, config: Config) -> None:
         code = (
             "from books.entities.safe_text import SafeText\nSafeText('test')\n"
         )

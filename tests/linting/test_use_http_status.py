@@ -12,14 +12,20 @@ def config() -> Config:
     return Config(path=Path("test.py"))
 
 
-def _lint(source: str, config: Config) -> list[str]:
+def _lint(
+    source: str,
+    config: Config,
+) -> list[str]:
     runner = LintRunner(config.path, source.encode())
     rule = UseHTTPStatus()
     reports = list(runner.collect_violations([rule], config))
     return [r.message for r in reports]
 
 
-def _autofix(source: str, config: Config) -> str:
+def _autofix(
+    source: str,
+    config: Config,
+) -> str:
     runner = LintRunner(config.path, source.encode())
     rule = UseHTTPStatus()
     reports = list(runner.collect_violations([rule], config))
