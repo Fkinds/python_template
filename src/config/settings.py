@@ -25,6 +25,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "config",
     "authors",
     "books",
 ]
@@ -88,6 +89,44 @@ USE_TZ = True
 STATIC_URL = "static/"
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
+# ---- S3 Object Storage (RustFS) ----
+S3_ENDPOINT_URL: str = env(
+    "S3_ENDPOINT_URL",
+    default="http://rustfs:9000",
+)
+S3_ACCESS_KEY: str = env(
+    "S3_ACCESS_KEY",
+    default="rustfsadmin",
+)
+S3_SECRET_KEY: str = env(
+    "S3_SECRET_KEY",
+    default="rustfsadmin",
+)
+S3_BUCKET_NAME: str = env(
+    "S3_BUCKET_NAME",
+    default="media",
+)
+
+STORAGES = {
+    "default": {
+        "BACKEND": ("storages.backends.s3.S3Storage"),
+        "OPTIONS": {
+            "endpoint_url": S3_ENDPOINT_URL,
+            "access_key": S3_ACCESS_KEY,
+            "secret_key": S3_SECRET_KEY,
+            "bucket_name": S3_BUCKET_NAME,
+            "querystring_auth": False,
+            "file_overwrite": False,
+            "default_acl": None,
+        },
+    },
+    "staticfiles": {
+        "BACKEND": ("django.contrib.staticfiles.storage.StaticFilesStorage"),
+    },
+}
+
+MEDIA_URL = f"{S3_ENDPOINT_URL}/{S3_BUCKET_NAME}/"
 
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": (
