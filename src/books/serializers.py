@@ -16,6 +16,7 @@ class BookSerializer(serializers.ModelSerializer[Book]):
             "isbn",
             "published_date",
             "author",
+            "cover_image",
             "created_at",
         ]
         read_only_fields = ["id", "created_at"]
@@ -45,6 +46,7 @@ class BookDetailSerializer(serializers.ModelSerializer[Book]):
             "isbn",
             "published_date",
             "author",
+            "cover_image",
             "created_at",
         ]
         read_only_fields = ["id", "created_at"]

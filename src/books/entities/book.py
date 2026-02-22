@@ -20,6 +20,11 @@ class Book(models.Model):
         on_delete=models.CASCADE,
         related_name="books",
     )
+    cover_image = models.ImageField(
+        upload_to="books/covers/",
+        blank=True,
+        default="",
+    )
     created_at = models.DateTimeField(auto_now_add=True)
 
     class Meta:

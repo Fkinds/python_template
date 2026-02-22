@@ -48,6 +48,7 @@ class TestBook:
             "isbn",
             "published_date",
             "author",
+            "cover_image",
             "created_at",
         }
 
@@ -100,6 +101,26 @@ class TestBook:
 
         # Assert
         assert field.auto_now_add is True
+
+    def test_happy_cover_image_allows_blank(
+        self,
+    ) -> None:
+        """カバー画像は省略可能であること."""
+        # Arrange & Act
+        field = Book._meta.get_field("cover_image")
+
+        # Assert
+        assert field.blank is True
+
+    def test_happy_cover_image_upload_to(
+        self,
+    ) -> None:
+        """カバー画像の保存先が正しいこと."""
+        # Arrange & Act
+        field = Book._meta.get_field("cover_image")
+
+        # Assert
+        assert field.upload_to == "books/covers/"
 
     def test_happy_title_vo_returns_safe_text(self) -> None:
         # Arrange

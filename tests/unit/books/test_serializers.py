@@ -20,6 +20,7 @@ class TestBookSerializer:
             "isbn",
             "published_date",
             "author",
+            "cover_image",
             "created_at",
         }
 
@@ -103,6 +104,7 @@ class TestBookDetailSerializer:
             "isbn",
             "published_date",
             "author",
+            "cover_image",
             "created_at",
         }
 
