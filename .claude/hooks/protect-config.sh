@@ -21,6 +21,7 @@ PROTECTED=(
   "$PROJECT_DIR/.claude/skills/"
   "$PROJECT_DIR/.claude/agents/"
   "$PROJECT_DIR/.claude/hooks/"
+  "$PROJECT_DIR/.claude/rules/"
 )
 
 for PATTERN in "${PROTECTED[@]}"; do
