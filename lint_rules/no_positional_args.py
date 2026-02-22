@@ -3,7 +3,9 @@ from fixit import Invalid
 from fixit import LintRule
 from fixit import Valid
 
-_FIRST_PARTY_PACKAGES = frozenset({"books", "authors", "config"})
+_FIRST_PARTY_PACKAGES = frozenset(
+    {"books", "authors", "config", "notifications"}
+)
 
 
 class NoPositionalArgs(LintRule):

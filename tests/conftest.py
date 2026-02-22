@@ -1,4 +1,5 @@
 import datetime
+from collections.abc import Generator
 from io import BytesIO
 from typing import Any
 
@@ -9,6 +10,10 @@ from rest_framework.test import APIClient
 
 from authors.models import Author
 from books.entities import Book
+from notifications.infrastructure.adapters.fake import FakeNotifier
+from notifications.infrastructure.containers.notificaton import (
+    override_notifier,
+)
 
 
 @pytest.fixture
@@ -44,6 +49,15 @@ def _memory_storage(settings: Any) -> None:
             ),
         },
     }
+
+
+@pytest.fixture
+def fake_notifier() -> Generator[FakeNotifier]:
+    """テスト用の FakeNotifier を DI に差し込む."""
+    notifier = FakeNotifier()
+    override_notifier(notifier=notifier)
+    yield notifier
+    override_notifier(notifier=None)
 
 
 @pytest.fixture
