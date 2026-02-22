@@ -1,6 +1,7 @@
 from typing import Any
 
 import pytest
+from django.core.files.uploadedfile import SimpleUploadedFile
 from hypothesis import given
 from hypothesis import strategies as st
 from rest_framework import status
@@ -90,6 +91,58 @@ class TestBookListCreate:
 
         # Assert
         assert response.status_code == status.HTTP_201_CREATED
+
+    def test_happy_create_book_with_cover_image(
+        self,
+        api_client: APIClient,
+        author: Author,
+        test_image: SimpleUploadedFile,
+    ) -> None:
+        """カバー画像付きで本を作成できること."""
+        # Arrange
+        payload = {
+            "title": "坊っちゃん",
+            "isbn": "9784003101032",
+            "published_date": "1906-04-01",
+            "author": author.pk,
+            "cover_image": test_image,
+        }
+
+        # Act
+        response = api_client.post(
+            self.endpoint,
+            payload,
+            format="multipart",
+        )
+
+        # Assert
+        assert response.status_code == status.HTTP_201_CREATED
+        assert response.data["cover_image"]
+
+    def test_happy_create_book_without_cover_image(
+        self,
+        api_client: APIClient,
+        author: Author,
+    ) -> None:
+        """カバー画像なしでも本を作成できること."""
+        # Arrange
+        payload = {
+            "title": "三四郎",
+            "isbn": "9784003101049",
+            "published_date": "1908-01-01",
+            "author": author.pk,
+        }
+
+        # Act
+        response = api_client.post(
+            self.endpoint,
+            payload,
+            format="json",
+        )
+
+        # Assert
+        assert response.status_code == status.HTTP_201_CREATED
+        assert not response.data["cover_image"]
 
     # --- 異常系 ---
 
