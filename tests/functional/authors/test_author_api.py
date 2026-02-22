@@ -7,6 +7,10 @@ from rest_framework import status
 from rest_framework.test import APIClient
 
 from authors.models import Author
+from notifications.infrastructure.adapters.fake import FakeNotifier
+from notifications.infrastructure.containers.notificaton import (
+    override_notifier,
+)
 
 
 @pytest.mark.django_db
@@ -51,6 +55,54 @@ class TestAuthorListCreate:
         assert response.data["bio"] == "走れメロスの著者"
         assert "id" in response.data
         assert "created_at" in response.data
+
+    def test_happy_create_sends_notification(
+        self,
+        api_client: APIClient,
+        db: Any,
+        fake_notifier: FakeNotifier,
+    ) -> None:
+        """著者の作成時に通知が送信されること."""
+        # Arrange
+        payload = {"name": "太宰治", "bio": "走れメロスの著者"}
+
+        # Act
+        api_client.post(self.endpoint, payload, format="json")
+
+        # Assert
+        assert len(fake_notifier.messages) == 1
+        (msg,) = fake_notifier.messages
+        assert "太宰治" in msg
+
+    def test_happy_create_succeeds_despite_notification_failure(
+        self,
+        api_client: APIClient,
+        db: Any,
+    ) -> None:
+        """通知送信失敗時でも著者の作成は成功すること."""
+
+        # Arrange
+        class _FailingNotifier:
+            def send(self, message: str) -> None:
+                msg = "Discord 障害"
+                raise RuntimeError(msg)
+
+        override_notifier(notifier=_FailingNotifier())
+        payload = {"name": "太宰治"}
+
+        # Act
+        response = api_client.post(
+            self.endpoint,
+            payload,
+            format="json",
+        )
+
+        # Assert
+        assert response.status_code == (status.HTTP_201_CREATED)
+        assert Author.objects.count() == 1
+
+        # Cleanup
+        override_notifier(notifier=None)
 
     def test_happy_create_author_without_bio(
         self, api_client: APIClient, db: Any

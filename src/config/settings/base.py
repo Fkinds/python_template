@@ -119,6 +119,12 @@ STORAGES = {
 
 MEDIA_URL = f"{S3_ENDPOINT_URL}/{S3_BUCKET_NAME}/"
 
+# ---- Discord Notifications ----
+DISCORD_WEBHOOK_URL: str = env(
+    "DISCORD_WEBHOOK_URL",
+    default="",
+)
+
 REST_FRAMEWORK = {
     "DEFAULT_PAGINATION_CLASS": (
         "rest_framework.pagination.PageNumberPagination"

@@ -13,6 +13,8 @@ dependencies = [
     "django-environ>=0.12",
     "django-storages[s3]>=1.14",
     "djangorestframework>=3.16",
+    "httpx>=0.28",
+    "injector>=0.22.0",
     "fixit>=2.1.0",
     "import-linter>=2.5.2",
     "mypy>=1.18.2",
@@ -83,7 +85,7 @@ docstring-code-format = true
 docstring-code-line-length = "dynamic"
 
 [tool.ruff.lint.isort]
-known-first-party = ["config", "authors", "books"]
+known-first-party = ["config", "authors", "books", "notifications"]
 force-single-line = true
 
 [tool.ruff.lint.per-file-ignores]
@@ -146,6 +148,10 @@ ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
 module = ["storages.*", "boto3.*", "botocore.*", "moto.*"]
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "injector"
 ignore_missing_imports = true
 
 [tool.pytest.ini_options]

@@ -9,6 +9,10 @@ from rest_framework.test import APIClient
 
 from authors.models import Author
 from books.entities import Book
+from notifications.infrastructure.adapters.fake import FakeNotifier
+from notifications.infrastructure.containers.notificaton import (
+    override_notifier,
+)
 
 
 @pytest.mark.django_db
@@ -41,7 +45,10 @@ class TestBookListCreate:
         assert "name" in result["author"]
 
     def test_happy_create_book(
-        self, api_client: APIClient, author: Author
+        self,
+        api_client: APIClient,
+        author: Author,
+        fake_notifier: FakeNotifier,
     ) -> None:
         # Arrange
         payload = {
@@ -58,6 +65,65 @@ class TestBookListCreate:
         assert response.status_code == status.HTTP_201_CREATED
         assert Book.objects.count() == 1
         assert response.data["title"] == "坊っちゃん"
+
+    def test_happy_create_sends_notification(
+        self,
+        api_client: APIClient,
+        author: Author,
+        fake_notifier: FakeNotifier,
+    ) -> None:
+        """本の作成時に通知が送信されること."""
+        # Arrange
+        payload = {
+            "title": "坊っちゃん",
+            "isbn": "9784003101025",
+            "published_date": "1906-04-01",
+            "author": author.pk,
+        }
+
+        # Act
+        api_client.post(self.endpoint, payload, format="json")
+
+        # Assert
+        assert len(fake_notifier.messages) == 1
+        (msg,) = fake_notifier.messages
+        assert "坊っちゃん" in msg
+        assert "夏目漱石" in msg
+
+    def test_happy_create_succeeds_despite_notification_failure(
+        self,
+        api_client: APIClient,
+        author: Author,
+    ) -> None:
+        """通知送信失敗時でも本の作成は成功すること."""
+
+        # Arrange
+        class _FailingNotifier:
+            def send(self, message: str) -> None:
+                msg = "Discord 障害"
+                raise RuntimeError(msg)
+
+        override_notifier(notifier=_FailingNotifier())
+        payload = {
+            "title": "坊っちゃん",
+            "isbn": "9784003101025",
+            "published_date": "1906-04-01",
+            "author": author.pk,
+        }
+
+        # Act
+        response = api_client.post(
+            self.endpoint,
+            payload,
+            format="json",
+        )
+
+        # Assert
+        assert response.status_code == (status.HTTP_201_CREATED)
+        assert Book.objects.count() == 1
+
+        # Cleanup
+        override_notifier(notifier=None)
 
     @given(
         title=st.text(
