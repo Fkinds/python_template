@@ -16,9 +16,10 @@ ENV PATH="/root/.local/bin:$PATH"
 WORKDIR /build
 
 COPY pyproject.toml uv.lock* ./
-RUN uv sync --frozen
+RUN uv sync --frozen --no-install-project
 
 COPY . .
+RUN uv sync --frozen
 
 # ============================
 # Stage 2: Runtime (rootless)
