@@ -146,12 +146,24 @@ class TestBookListCreate:
 
     # --- 異常系 ---
 
-    def test_error_create_rejects_emoji_title(
-        self, api_client: APIClient, author: Author
+    @pytest.mark.parametrize(
+        "title",
+        [
+            "テスト😀",
+            "<script>alert('xss')</script>",
+        ],
+        ids=["emoji", "script_tag"],
+    )
+    def test_error_create_rejects_unsafe_title(
+        self,
+        api_client: APIClient,
+        author: Author,
+        title: str,
     ) -> None:
+        """異常系: 不正文字を含むタイトルが拒否されること."""
         # Arrange
         payload = {
-            "title": "テスト😀",
+            "title": title,
             "isbn": "9784003101025",
             "published_date": "2000-01-01",
             "author": author.pk,
@@ -161,25 +173,7 @@ class TestBookListCreate:
         response = api_client.post(self.endpoint, payload, format="json")
 
         # Assert
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "title" in response.data
-
-    def test_error_create_rejects_script_tag_title(
-        self, api_client: APIClient, author: Author
-    ) -> None:
-        # Arrange
-        payload = {
-            "title": "<script>alert('xss')</script>",
-            "isbn": "9784003101025",
-            "published_date": "2000-01-01",
-            "author": author.pk,
-        }
-
-        # Act
-        response = api_client.post(self.endpoint, payload, format="json")
-
-        # Assert
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
+        assert response.status_code == (status.HTTP_400_BAD_REQUEST)
         assert "title" in response.data
 
     def test_error_create_rejects_empty_body(
@@ -196,13 +190,37 @@ class TestBookListCreate:
         missing = {"title", "isbn", "published_date", "author"}
         assert missing <= set(response.data.keys())
 
-    def test_error_create_rejects_missing_title(
-        self, api_client: APIClient, author: Author
+    @pytest.mark.parametrize(
+        ("missing_field", "payload_without"),
+        [
+            (
+                "title",
+                {
+                    "isbn": "9784003101025",
+                    "published_date": "1906-04-01",
+                },
+            ),
+            (
+                "isbn",
+                {
+                    "title": "テスト",
+                    "published_date": "1906-04-01",
+                },
+            ),
+        ],
+        ids=["title", "isbn"],
+    )
+    def test_error_create_rejects_missing_field(
+        self,
+        api_client: APIClient,
+        author: Author,
+        missing_field: str,
+        payload_without: dict[str, str],
     ) -> None:
+        """異常系: 必須フィールドが欠けている場合に拒否されること."""
         # Arrange
         payload = {
-            "isbn": "9784003101025",
-            "published_date": "1906-04-01",
+            **payload_without,
             "author": author.pk,
         }
 
@@ -210,25 +228,8 @@ class TestBookListCreate:
         response = api_client.post(self.endpoint, payload, format="json")
 
         # Assert
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "title" in response.data
-
-    def test_error_create_rejects_missing_isbn(
-        self, api_client: APIClient, author: Author
-    ) -> None:
-        # Arrange
-        payload = {
-            "title": "テスト",
-            "published_date": "1906-04-01",
-            "author": author.pk,
-        }
-
-        # Act
-        response = api_client.post(self.endpoint, payload, format="json")
-
-        # Assert
-        assert response.status_code == status.HTTP_400_BAD_REQUEST
-        assert "isbn" in response.data
+        assert response.status_code == (status.HTTP_400_BAD_REQUEST)
+        assert missing_field in response.data
 
     def test_error_create_rejects_duplicate_isbn(
         self, api_client: APIClient, book: Book
@@ -381,19 +382,19 @@ class TestBookRetrieveUpdateDelete:
 
     # --- 異常系 ---
 
-    def test_error_retrieve_returns_404_for_missing_book(
-        self, api_client: APIClient, db: Any
+    @pytest.mark.parametrize(
+        "method",
+        ["get", "put", "patch", "delete"],
+    )
+    def test_error_returns_404_for_missing_book(
+        self,
+        api_client: APIClient,
+        db: Any,
+        method: str,
     ) -> None:
-        # Act
-        response = api_client.get(f"{self.endpoint}99999/")
-
-        # Assert
-        assert response.status_code == status.HTTP_404_NOT_FOUND
-
-    def test_error_put_returns_404_for_missing_book(
-        self, api_client: APIClient, db: Any
-    ) -> None:
+        """異常系: 存在しない本に対して 404 を返すこと."""
         # Arrange
+        url = f"{self.endpoint}99999/"
         payload = {
             "title": "存在しない",
             "isbn": "1234567890123",
@@ -402,21 +403,18 @@ class TestBookRetrieveUpdateDelete:
         }
 
         # Act
-        response = api_client.put(
-            f"{self.endpoint}99999/", payload, format="json"
-        )
+        match method:
+            case "get":
+                response = api_client.get(url)
+            case "put":
+                response = api_client.put(url, payload, format="json")
+            case "patch":
+                response = api_client.patch(url, payload, format="json")
+            case "delete":
+                response = api_client.delete(url)
 
         # Assert
-        assert response.status_code == status.HTTP_404_NOT_FOUND
-
-    def test_error_delete_returns_404_for_missing_book(
-        self, api_client: APIClient, db: Any
-    ) -> None:
-        # Act
-        response = api_client.delete(f"{self.endpoint}99999/")
-
-        # Assert
-        assert response.status_code == status.HTTP_404_NOT_FOUND
+        assert response.status_code == (status.HTTP_404_NOT_FOUND)
 
     def test_error_put_rejects_missing_required_fields(
         self, api_client: APIClient, book: Book
@@ -431,3 +429,21 @@ class TestBookRetrieveUpdateDelete:
 
         # Assert
         assert response.status_code == status.HTTP_400_BAD_REQUEST
+
+    def test_error_patch_rejects_unsafe_title(
+        self, api_client: APIClient, book: Book
+    ) -> None:
+        """異常系: PATCHで不正タイトルが拒否されること."""
+        # Arrange
+        payload = {"title": "テスト😀"}
+
+        # Act
+        response = api_client.patch(
+            f"{self.endpoint}{book.pk}/",
+            payload,
+            format="json",
+        )
+
+        # Assert
+        assert response.status_code == (status.HTTP_400_BAD_REQUEST)
+        assert "title" in response.data
