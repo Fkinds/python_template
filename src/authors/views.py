@@ -8,9 +8,8 @@ from authors.models import Author
 from authors.serializers import AuthorSerializer
 from notifications.domain.events import AuthorCreated
 from notifications.domain.results import NotificationProblem
-from notifications.infrastructure.containers.notificaton import (
-    get_author_created_use_case,
-)
+from notifications.infrastructure.containers.notificaton import container
+from notifications.usecases.protocols import NotifyAuthorCreatedUseCase
 
 logger = logging.getLogger(__name__)
 
@@ -23,9 +22,9 @@ class AuthorViewSet(viewsets.ModelViewSet[Author]):
         """著者の作成時に通知を送信する."""
         instance = serializer.save()
         event = AuthorCreated(name=instance.name)
-        result = get_author_created_use_case().execute(
-            event=event,
-        )
+        result = container.injector.get(
+            NotifyAuthorCreatedUseCase,  # type: ignore[type-abstract]
+        ).execute(event=event)
         if isinstance(result, NotificationProblem):
             logger.warning(
                 "通知送信に失敗しました: %s",

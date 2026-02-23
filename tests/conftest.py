@@ -12,8 +12,9 @@ from authors.models import Author
 from books.entities import Book
 from notifications.infrastructure.adapters.fake import FakeNotifier
 from notifications.infrastructure.containers.notificaton import (
-    override_notifier,
+    NotificationModule,
 )
+from notifications.infrastructure.containers.notificaton import container
 
 
 @pytest.fixture
@@ -55,9 +56,11 @@ def _memory_storage(settings: Any) -> None:
 def fake_notifier() -> Generator[FakeNotifier]:
     """テスト用の FakeNotifier を DI に差し込む."""
     notifier = FakeNotifier()
-    override_notifier(notifier=notifier)
+    container.override(
+        NotificationModule(notifier_override=notifier),
+    )
     yield notifier
-    override_notifier(notifier=None)
+    container.reset()
 
 
 @pytest.fixture

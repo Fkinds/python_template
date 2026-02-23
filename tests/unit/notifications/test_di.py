@@ -1,82 +1,91 @@
 from notifications.infrastructure.adapters.fake import FakeNotifier
 from notifications.infrastructure.containers.notificaton import (
-    get_author_created_use_case,
+    NotificationModule,
 )
-from notifications.infrastructure.containers.notificaton import (
-    get_book_created_use_case,
-)
-from notifications.infrastructure.containers.notificaton import get_notifier
-from notifications.infrastructure.containers.notificaton import (
-    override_notifier,
-)
+from notifications.infrastructure.containers.notificaton import container
+from notifications.usecases.protocols import Notifier
 from notifications.usecases.protocols import NotifyAuthorCreatedUseCase
 from notifications.usecases.protocols import NotifyBookCreatedUseCase
 
 
-class TestDiOverride:
-    """DI オーバーライド機能のテスト."""
+class TestContainerOverride:
+    """DI コンテナの override / reset テスト."""
 
     def test_happy_override_returns_fake(self) -> None:
-        """override_notifier で FakeNotifier が返ること."""
+        """override で FakeNotifier が返ること."""
         # Arrange
         fake = FakeNotifier()
-        override_notifier(notifier=fake)
+        container.override(
+            NotificationModule(notifier_override=fake),
+        )
 
         # Act
-        result = get_notifier()
+        result = container.injector.get(
+            Notifier,  # type: ignore[type-abstract]
+        )
 
         # Assert
         assert result is fake
 
         # Cleanup
-        override_notifier(notifier=None)
+        container.reset()
 
     def test_happy_default_returns_notifier(self) -> None:
         """デフォルトで Notifier 互換オブジェクトが返ること."""
         # Arrange
-        override_notifier(notifier=None)
+        container.reset()
 
         # Act
-        result = get_notifier()
+        result = container.injector.get(
+            Notifier,  # type: ignore[type-abstract]
+        )
 
-        # Assert — ConsoleNotifier が返る (dev設定では URL 未設定)
+        # Assert — ConsoleNotifierImpl が返る (dev設定では URL 未設定)
         assert hasattr(result, "send")
         assert callable(result.send)
 
 
-class TestUseCaseGetters:
-    """ユースケース取得ヘルパーのテスト."""
+class TestContainerUseCaseResolution:
+    """コンテナからのユースケース解決テスト."""
 
     def test_happy_book_use_case_satisfies_protocol(
         self,
     ) -> None:
-        """get_book_created_use_case が Protocol 互換を返すこと."""
+        """NotifyBookCreatedUseCase が Protocol 互換を返すこと."""
         # Arrange
         fake = FakeNotifier()
-        override_notifier(notifier=fake)
+        container.override(
+            NotificationModule(notifier_override=fake),
+        )
 
         # Act
-        result = get_book_created_use_case()
+        result = container.injector.get(
+            NotifyBookCreatedUseCase,  # type: ignore[type-abstract]
+        )
 
         # Assert
         assert isinstance(result, NotifyBookCreatedUseCase)
 
         # Cleanup
-        override_notifier(notifier=None)
+        container.reset()
 
     def test_happy_author_use_case_satisfies_protocol(
         self,
     ) -> None:
-        """get_author_created_use_case が Protocol 互換を返すこと."""
+        """NotifyAuthorCreatedUseCase が Protocol 互換を返すこと."""
         # Arrange
         fake = FakeNotifier()
-        override_notifier(notifier=fake)
+        container.override(
+            NotificationModule(notifier_override=fake),
+        )
 
         # Act
-        result = get_author_created_use_case()
+        result = container.injector.get(
+            NotifyAuthorCreatedUseCase,  # type: ignore[type-abstract]
+        )
 
         # Assert
         assert isinstance(result, NotifyAuthorCreatedUseCase)
 
         # Cleanup
-        override_notifier(notifier=None)
+        container.reset()

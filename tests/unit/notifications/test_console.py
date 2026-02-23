@@ -1,23 +1,38 @@
 import logging
+from unittest.mock import create_autospec
 
-import pytest
-
-from notifications.infrastructure.adapters.console import ConsoleNotifier
-
-type LogFixture = pytest.LogCaptureFixture
+from common.usecases.protocols import LoggerFactory
+from notifications.infrastructure.adapters.console import ConsoleNotifierImpl
 
 
-class TestConsoleNotifier:
-    """ConsoleNotifier のログ出力テスト."""
+class _StubLoggerFactory:
+    """テスト用: 固定の mock Logger を返すファクトリ."""
 
-    def test_happy_logs_message(self, caplog: LogFixture) -> None:
+    def __init__(self, logger: logging.Logger) -> None:
+        self._logger = logger
+
+    def build(self, name: str) -> logging.Logger:
+        return self._logger
+
+
+class TestConsoleNotifierImpl:
+    """ConsoleNotifierImpl のログ出力テスト."""
+
+    def test_happy_logs_message(self) -> None:
         """通知メッセージがログに出力されること."""
         # Arrange
-        notifier = ConsoleNotifier()
+        mock_logger = create_autospec(
+            logging.Logger,
+            instance=True,
+        )
+        factory: LoggerFactory = _StubLoggerFactory(mock_logger)
+        notifier = ConsoleNotifierImpl(logger_factory=factory)
 
         # Act
-        with caplog.at_level(logging.INFO):
-            notifier.send(message="テスト通知")
+        notifier.send(message="テスト通知")
 
         # Assert
-        assert "[Notification] テスト通知" in caplog.text
+        mock_logger.info.assert_called_once_with(
+            "[Notification] %s",
+            "テスト通知",
+        )

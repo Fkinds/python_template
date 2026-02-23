@@ -11,8 +11,9 @@ from authors.models import Author
 from books.entities import Book
 from notifications.infrastructure.adapters.fake import FakeNotifier
 from notifications.infrastructure.containers.notificaton import (
-    override_notifier,
+    NotificationModule,
 )
+from notifications.infrastructure.containers.notificaton import container
 
 
 @pytest.mark.django_db
@@ -103,7 +104,11 @@ class TestBookListCreate:
                 msg = "Discord 障害"
                 raise RuntimeError(msg)
 
-        override_notifier(notifier=_FailingNotifier())
+        container.override(
+            NotificationModule(
+                notifier_override=_FailingNotifier(),
+            ),
+        )
         payload = {
             "title": "坊っちゃん",
             "isbn": "9784003101025",
@@ -123,7 +128,7 @@ class TestBookListCreate:
         assert Book.objects.count() == 1
 
         # Cleanup
-        override_notifier(notifier=None)
+        container.reset()
 
     @given(
         title=st.text(

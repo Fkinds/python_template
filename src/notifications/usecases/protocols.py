@@ -10,24 +10,18 @@ from notifications.domain.results import NotificationResult
 class Notifier(Protocol):
     """通知送信のポート."""
 
-    def send(self, message: str) -> None:
-        """メッセージを送信する."""
-        ...
+    def send(self, message: str) -> None: ...
 
 
 @runtime_checkable
 class NotifyBookCreatedUseCase(Protocol):
     """本作成通知ユースケースのポート."""
 
-    def execute(self, event: BookCreated) -> NotificationResult:
-        """本作成イベントの通知を実行する."""
-        ...
+    def execute(self, event: BookCreated) -> NotificationResult: ...
 
 
 @runtime_checkable
 class NotifyAuthorCreatedUseCase(Protocol):
     """著者作成通知ユースケースのポート."""
 
-    def execute(self, event: AuthorCreated) -> NotificationResult:
-        """著者作成イベントの通知を実行する."""
-        ...
+    def execute(self, event: AuthorCreated) -> NotificationResult: ...
