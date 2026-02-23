@@ -1,15 +1,7 @@
-from pathlib import Path
-
-import pytest
 from fixit.engine import LintRunner
 from fixit.ftypes import Config
 
 from lint_rules.no_attr_shorthand import NoAttrShorthand
-
-
-@pytest.fixture
-def config() -> Config:
-    return Config(path=Path("test.py"))
 
 
 def _lint(

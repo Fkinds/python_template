@@ -1,15 +1,7 @@
-from pathlib import Path
-
-import pytest
 from fixit.engine import LintRunner
 from fixit.ftypes import Config
 
 from lint_rules.use_http_status import UseHTTPStatus
-
-
-@pytest.fixture
-def config() -> Config:
-    return Config(path=Path("test.py"))
 
 
 def _lint(
