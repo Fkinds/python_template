@@ -20,4 +20,5 @@ Package manager: `uv`. First-party packages: `config`, `common`, `authors`, `boo
 - Models: `auto_now_add` for timestamps, `related_name` on ForeignKey, define `Meta.ordering` and `__str__`
 - Serializers: separate by action (list vs detail), set `read_only_fields`
 - Implementation classes: Protocol を満たす具象クラスには `*Impl` サフィックスを付ける (例: `NotifierImpl`, `LoggerFactoryImpl`)
+- 順序に意味のない定数は `list` ではなく `frozenset` を使う (例: `_ALLOWED = frozenset({"a", "b"})`)
 - Tests: Arrange-Act-Assert, prefix `test_happy_` / `test_error_`
