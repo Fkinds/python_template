@@ -1,4 +1,5 @@
 from pathlib import Path
+from typing import Any
 
 import environ
 
@@ -130,4 +131,36 @@ REST_FRAMEWORK = {
         "rest_framework.pagination.PageNumberPagination"
     ),
     "PAGE_SIZE": 10,
+}
+
+# ---- Logging ----
+LOGGING: dict[str, Any] = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "formatters": {
+        "verbose": {
+            "format": ("{levelname} {asctime} {name} {message}"),
+            "style": "{",
+        },
+    },
+    "handlers": {
+        "console": {
+            "class": "logging.StreamHandler",
+            "formatter": "verbose",
+        },
+    },
+    "loggers": {
+        "notifications": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+        "authors": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+        "books": {
+            "handlers": ["console"],
+            "level": "INFO",
+        },
+    },
 }
