@@ -9,8 +9,9 @@ from rest_framework.test import APIClient
 from authors.models import Author
 from notifications.infrastructure.adapters.fake import FakeNotifier
 from notifications.infrastructure.containers.notificaton import (
-    override_notifier,
+    NotificationModule,
 )
+from notifications.infrastructure.containers.notificaton import container
 
 
 @pytest.mark.django_db
@@ -87,7 +88,11 @@ class TestAuthorListCreate:
                 msg = "Discord 障害"
                 raise RuntimeError(msg)
 
-        override_notifier(notifier=_FailingNotifier())
+        container.override(
+            NotificationModule(
+                notifier_override=_FailingNotifier(),
+            ),
+        )
         payload = {"name": "太宰治"}
 
         # Act
@@ -102,7 +107,7 @@ class TestAuthorListCreate:
         assert Author.objects.count() == 1
 
         # Cleanup
-        override_notifier(notifier=None)
+        container.reset()
 
     def test_happy_create_author_without_bio(
         self, api_client: APIClient, db: Any

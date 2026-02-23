@@ -1,8 +1,12 @@
+import logging
 from http import HTTPStatus
+from unittest.mock import create_autospec
 
 from hypothesis import given
 from hypothesis import strategies as st
 
+from common.infrastructure.factories.logger import LoggerFactoryImpl
+from common.usecases.protocols import LoggerFactory
 from notifications.domain.events import AuthorCreated
 from notifications.domain.events import BookCreated
 from notifications.domain.results import NotificationProblem
@@ -12,6 +16,17 @@ from notifications.usecases.notify import NotifyAuthorCreatedUseCaseImpl
 from notifications.usecases.notify import NotifyBookCreatedUseCaseImpl
 
 _non_empty_text = st.text(min_size=1).filter(lambda s: s.strip())
+_real_factory = LoggerFactoryImpl()
+
+
+class _StubLoggerFactory:
+    """テスト用: 固定の mock Logger を返すファクトリ."""
+
+    def __init__(self, logger: logging.Logger) -> None:
+        self._logger = logger
+
+    def build(self, name: str) -> logging.Logger:
+        return self._logger
 
 
 class _FailingNotifier:
@@ -31,7 +46,10 @@ class TestNotifyBookCreatedUseCaseImpl:
         """タイトルと著者名を含むメッセージが送信されること."""
         # Arrange
         fake = FakeNotifier()
-        use_case = NotifyBookCreatedUseCaseImpl(notifier=fake)
+        use_case = NotifyBookCreatedUseCaseImpl(
+            notifier=fake,
+            logger_factory=_real_factory,
+        )
         event = BookCreated(
             title="吾輩は猫である",
             isbn="9784003101018",
@@ -62,7 +80,10 @@ class TestNotifyBookCreatedUseCaseImpl:
         """メッセージにイベントのフィールドが含まれること."""
         # Arrange
         fake = FakeNotifier()
-        use_case = NotifyBookCreatedUseCaseImpl(notifier=fake)
+        use_case = NotifyBookCreatedUseCaseImpl(
+            notifier=fake,
+            logger_factory=_real_factory,
+        )
         event = BookCreated(
             title=title,
             isbn=isbn,
@@ -85,6 +106,7 @@ class TestNotifyBookCreatedUseCaseImpl:
         # Arrange
         use_case = NotifyBookCreatedUseCaseImpl(
             notifier=_FailingNotifier(),
+            logger_factory=_real_factory,
         )
         event = BookCreated(
             title="テスト",
@@ -100,6 +122,36 @@ class TestNotifyBookCreatedUseCaseImpl:
         assert result.status == HTTPStatus.BAD_GATEWAY
         assert "テスト" in result.detail
 
+    def test_error_logs_warning_on_notifier_failure(
+        self,
+    ) -> None:
+        """Notifier 失敗時に warning ログが出力されること."""
+        # Arrange
+        mock_logger = create_autospec(
+            logging.Logger,
+            instance=True,
+        )
+        factory: LoggerFactory = _StubLoggerFactory(mock_logger)
+        use_case = NotifyBookCreatedUseCaseImpl(
+            notifier=_FailingNotifier(),
+            logger_factory=factory,
+        )
+        event = BookCreated(
+            title="テスト本",
+            isbn="9784003101018",
+            author_name="テスト著者",
+        )
+
+        # Act
+        use_case.execute(event=event)
+
+        # Assert
+        mock_logger.warning.assert_called_once_with(
+            "本作成通知の送信に失敗: title=%s",
+            "テスト本",
+            exc_info=True,
+        )
+
 
 class TestNotifyAuthorCreatedUseCaseImpl:
     """著者の作成通知ユースケースのテスト."""
@@ -108,7 +160,10 @@ class TestNotifyAuthorCreatedUseCaseImpl:
         """著者名を含むメッセージが送信されること."""
         # Arrange
         fake = FakeNotifier()
-        use_case = NotifyAuthorCreatedUseCaseImpl(notifier=fake)
+        use_case = NotifyAuthorCreatedUseCaseImpl(
+            notifier=fake,
+            logger_factory=_real_factory,
+        )
         event = AuthorCreated(name="太宰治")
 
         # Act
@@ -125,7 +180,10 @@ class TestNotifyAuthorCreatedUseCaseImpl:
         """メッセージに著者名が含まれること."""
         # Arrange
         fake = FakeNotifier()
-        use_case = NotifyAuthorCreatedUseCaseImpl(notifier=fake)
+        use_case = NotifyAuthorCreatedUseCaseImpl(
+            notifier=fake,
+            logger_factory=_real_factory,
+        )
         event = AuthorCreated(name=name)
 
         # Act
@@ -143,6 +201,7 @@ class TestNotifyAuthorCreatedUseCaseImpl:
         # Arrange
         use_case = NotifyAuthorCreatedUseCaseImpl(
             notifier=_FailingNotifier(),
+            logger_factory=_real_factory,
         )
         event = AuthorCreated(name="テスト著者")
 
@@ -153,3 +212,29 @@ class TestNotifyAuthorCreatedUseCaseImpl:
         assert isinstance(result, NotificationProblem)
         assert result.status == HTTPStatus.BAD_GATEWAY
         assert "テスト著者" in result.detail
+
+    def test_error_logs_warning_on_notifier_failure(
+        self,
+    ) -> None:
+        """Notifier 失敗時に warning ログが出力されること."""
+        # Arrange
+        mock_logger = create_autospec(
+            logging.Logger,
+            instance=True,
+        )
+        factory: LoggerFactory = _StubLoggerFactory(mock_logger)
+        use_case = NotifyAuthorCreatedUseCaseImpl(
+            notifier=_FailingNotifier(),
+            logger_factory=factory,
+        )
+        event = AuthorCreated(name="テスト著者")
+
+        # Act
+        use_case.execute(event=event)
+
+        # Assert
+        mock_logger.warning.assert_called_once_with(
+            "著者作成通知の送信に失敗: name=%s",
+            "テスト著者",
+            exc_info=True,
+        )

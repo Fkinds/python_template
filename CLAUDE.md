@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 Django REST Framework API template. Python 3.14 / Django 5.2 / PostgreSQL 16.
-Package manager: `uv`. First-party packages: `config`, `authors`, `books`.
+Package manager: `uv`. First-party packages: `config`, `common`, `authors`, `books`.
 
 ## Rules
 
@@ -19,4 +19,5 @@ Package manager: `uv`. First-party packages: `config`, `authors`, `books`.
 - Value objects: `attrs.frozen` + `kw_only=True`
 - Models: `auto_now_add` for timestamps, `related_name` on ForeignKey, define `Meta.ordering` and `__str__`
 - Serializers: separate by action (list vs detail), set `read_only_fields`
+- Implementation classes: Protocol を満たす具象クラスには `*Impl` サフィックスを付ける (例: `NotifierImpl`, `LoggerFactoryImpl`)
 - Tests: Arrange-Act-Assert, prefix `test_happy_` / `test_error_`

@@ -58,4 +58,5 @@ domain ← usecases ← interfaces ← infrastructure
 - 値オブジェクトは `attrs.frozen(kw_only=True)`
 - DTO は `pydantic.BaseModel` (バリデーション + シリアライズ)
 - ポートは `typing.Protocol`
+- Protocol を満たす具象クラスには `*Impl` サフィックスを付ける
 - ユースケース関数はキーワード引数のみ

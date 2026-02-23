@@ -12,9 +12,8 @@ from books.serializers import BookDetailSerializer
 from books.serializers import BookSerializer
 from notifications.domain.events import BookCreated
 from notifications.domain.results import NotificationProblem
-from notifications.infrastructure.containers.notificaton import (
-    get_book_created_use_case,
-)
+from notifications.infrastructure.containers.notificaton import container
+from notifications.usecases.protocols import NotifyBookCreatedUseCase
 
 logger = logging.getLogger(__name__)
 
@@ -42,9 +41,9 @@ class BookViewSet(viewsets.ModelViewSet[Book]):
             isbn=instance.isbn,
             author_name=instance.author.name,
         )
-        result = get_book_created_use_case().execute(
-            event=event,
-        )
+        result = container.injector.get(
+            NotifyBookCreatedUseCase,  # type: ignore[type-abstract]
+        ).execute(event=event)
         if isinstance(result, NotificationProblem):
             logger.warning(
                 "通知送信に失敗しました: %s",

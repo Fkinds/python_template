@@ -4,21 +4,24 @@ from unittest.mock import patch
 import httpx
 import pytest
 
+from common.infrastructure.factories.logger import LoggerFactoryImpl
 from notifications.infrastructure.adapters.discord import (
-    DiscordWebhookNotifier,
+    DiscordWebhookNotifierImpl,
 )
 
 _TEST_URL = "https://discord.com/api/webhooks/test"
+_factory = LoggerFactoryImpl()
 
 
-class TestDiscordWebhookNotifier:
-    """DiscordWebhookNotifier の送信テスト."""
+class TestDiscordWebhookNotifierImpl:
+    """DiscordWebhookNotifierImpl の送信テスト."""
 
     def test_happy_sends_post_request(self) -> None:
         """Discord Webhook に POST リクエストが送信されること."""
         # Arrange
-        notifier = DiscordWebhookNotifier(
+        notifier = DiscordWebhookNotifierImpl(
             webhook_url=_TEST_URL,
+            logger_factory=_factory,
         )
         mock_response = httpx.Response(
             status_code=HTTPStatus.NO_CONTENT,
@@ -72,8 +75,9 @@ class TestDiscordWebhookNotifier:
     ) -> None:
         """通信障害時に例外が発生すること."""
         # Arrange
-        notifier = DiscordWebhookNotifier(
+        notifier = DiscordWebhookNotifierImpl(
             webhook_url=_TEST_URL,
+            logger_factory=_factory,
         )
 
         if side_effect is not None:

@@ -3,9 +3,12 @@ from __future__ import annotations
 import injector
 from django.conf import settings
 
-from notifications.infrastructure.adapters.console import ConsoleNotifier
+from common.infrastructure.containers.di import ContainerHolder
+from common.infrastructure.factories.logger import LoggerFactoryImpl
+from common.usecases.protocols import LoggerFactory
+from notifications.infrastructure.adapters.console import ConsoleNotifierImpl
 from notifications.infrastructure.adapters.discord import (
-    DiscordWebhookNotifier,
+    DiscordWebhookNotifierImpl,
 )
 from notifications.usecases.notify import NotifyAuthorCreatedUseCaseImpl
 from notifications.usecases.notify import NotifyBookCreatedUseCaseImpl
@@ -13,83 +16,53 @@ from notifications.usecases.protocols import Notifier
 from notifications.usecases.protocols import NotifyAuthorCreatedUseCase
 from notifications.usecases.protocols import NotifyBookCreatedUseCase
 
-_notifier_override: Notifier | None = None
-
 
 class NotificationModule(injector.Module):
     """通知の DI バインディングを構成するモジュール."""
 
+    def __init__(self, notifier_override: Notifier | None = None) -> None:
+        self._notifier_override = notifier_override
+
     def configure(self, binder: injector.Binder) -> None:
-        webhook_url: str = getattr(
-            settings,
-            "DISCORD_WEBHOOK_URL",
-            "",
+        factory = LoggerFactoryImpl()
+        binder.bind(
+            LoggerFactory,  # type: ignore[type-abstract]
+            to=factory,
         )
-        if webhook_url:
+
+        if self._notifier_override is not None:
             binder.bind(
                 Notifier,  # type: ignore[type-abstract]
-                to=DiscordWebhookNotifier(
-                    webhook_url=webhook_url,
-                ),
+                to=self._notifier_override,
             )
         else:
-            binder.bind(
-                Notifier,  # type: ignore[type-abstract]
-                to=ConsoleNotifier(),
+            webhook_url: str = getattr(
+                settings,
+                "DISCORD_WEBHOOK_URL",
+                "",
             )
+            if webhook_url:
+                binder.bind(
+                    Notifier,  # type: ignore[type-abstract]
+                    to=DiscordWebhookNotifierImpl(
+                        webhook_url=webhook_url,
+                        logger_factory=factory,
+                    ),
+                )
+            else:
+                binder.bind(
+                    Notifier,  # type: ignore[type-abstract]
+                    to=ConsoleNotifierImpl,
+                )
 
-    @injector.provider
-    def _book_uc(self, notifier: Notifier) -> NotifyBookCreatedUseCase:
-        return NotifyBookCreatedUseCaseImpl(
-            notifier=notifier,
+        binder.bind(
+            NotifyBookCreatedUseCase,  # type: ignore[type-abstract]
+            to=NotifyBookCreatedUseCaseImpl,
+        )
+        binder.bind(
+            NotifyAuthorCreatedUseCase,  # type: ignore[type-abstract]
+            to=NotifyAuthorCreatedUseCaseImpl,
         )
 
-    @injector.provider
-    def _author_uc(self, notifier: Notifier) -> NotifyAuthorCreatedUseCase:
-        return NotifyAuthorCreatedUseCaseImpl(
-            notifier=notifier,
-        )
 
-
-def _build_container() -> injector.Injector:
-    return injector.Injector([NotificationModule()])
-
-
-_container: injector.Injector = _build_container()
-
-
-def get_notifier() -> Notifier:
-    """DI コンテナから Notifier を取得するヘルパー."""
-    if _notifier_override is not None:
-        return _notifier_override
-    return _container.get(
-        Notifier,  # type: ignore[type-abstract]
-    )
-
-
-def override_notifier(notifier: Notifier | None) -> None:
-    """テスト用: Notifier を差し替える."""
-    global _notifier_override
-    _notifier_override = notifier
-
-
-def get_book_created_use_case() -> NotifyBookCreatedUseCase:
-    """本作成通知ユースケースを取得するヘルパー."""
-    if _notifier_override is not None:
-        return NotifyBookCreatedUseCaseImpl(
-            notifier=_notifier_override,
-        )
-    return _container.get(
-        NotifyBookCreatedUseCase,  # type: ignore[type-abstract]
-    )
-
-
-def get_author_created_use_case() -> NotifyAuthorCreatedUseCase:
-    """著者作成通知ユースケースを取得するヘルパー."""
-    if _notifier_override is not None:
-        return NotifyAuthorCreatedUseCaseImpl(
-            notifier=_notifier_override,
-        )
-    return _container.get(
-        NotifyAuthorCreatedUseCase,  # type: ignore[type-abstract]
-    )
+container = ContainerHolder(NotificationModule())
