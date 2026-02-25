@@ -74,6 +74,7 @@ select = [
 ]
 ignore = [
     "RUF012",  # Django Meta / ModelSerializer で ClassVar 不要
+    "PIE790",  # docstring のみのクラスでも pass を明示する
 ]
 
 [tool.ruff.format]
