@@ -93,10 +93,14 @@ private modules and a re-exporting `__init__.py`.
 |---|---|---|---|
 | Method cache | `@lru_cache` on method | `@cached_property` | `lru_cache` prevents instance GC |
 | Module-level | `@lru_cache` (maxsize=None) | `@lru_cache(maxsize=N)` | Bound size to prevent leak |
+| Unbounded decorator | `@functools.cache` | `@lru_cache(maxsize=N)` | `cache` = `lru_cache(maxsize=None)` |
 | View cache | Manual cache logic per view | `@cache_page(timeout)` | Declarative, consistent TTL |
 | Object lookup | `Model.objects.get()` every time | `django.core.cache` + TTL | Reduce DB round-trips |
 | Invalidation | Manual `cache.delete()` everywhere | `post_save` / `post_delete` signal | Centralized, automatic |
 | Cache key | Hardcoded `"my_key"` | `f"{model}:{pk}:v{VER}"` | Namespaced, versionable |
+| Stampede | Fixed TTL on hot keys | TTL + random jitter | Prevent thundering herd on expiry |
+| Mutable values | Cache `list` / `dict` directly | Cache a copy or frozen type | Caller mutation corrupts cache |
+| Sensitive data | Cache PII / tokens as-is | Exclude or encrypt before caching | Leak risk if cache is exposed |
 
 ```python
 # Bad: lru_cache on method leaks self via cache reference
@@ -109,6 +113,10 @@ class Service:
     @cached_property
     def expensive(self) -> int: ...
 
+# Bad: functools.cache is unbounded (= lru_cache(maxsize=None))
+@functools.cache
+def fetch(key: str) -> str: ...
+
 # Good: Django low-level cache with TTL
 from django.core import cache as django_cache
 
@@ -119,6 +127,12 @@ def get_author(pk: int) -> Author:
         author = Author.objects.get(pk=pk)
         django_cache.cache.set(key, author, timeout=300)
     return author
+
+# Good: TTL with jitter to prevent cache stampede
+import random
+BASE_TTL = 300
+jitter = random.randint(0, 30)
+django_cache.cache.set(key, value, timeout=BASE_TTL + jitter)
 ```
 
 ## Exception Handling Anti-Patterns
