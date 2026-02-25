@@ -1,4 +1,24 @@
 {
+  "permissions": {
+    "allow": [
+      "Bash(uv run ruff check:*)",
+      "Bash(uv run ruff format:*)",
+      "Bash(uv run mypy:*)",
+      "Bash(uv run fixit lint:*)",
+      "Bash(uv run pytest:*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git branch:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout:*)",
+      "Bash(git pull:*)",
+      "Bash(git push:*)",
+      "Bash(gh pr:*)",
+      "Bash(gh run:*)"
+    ]
+  },
   "hooks": {
     "PreToolUse": [
       {

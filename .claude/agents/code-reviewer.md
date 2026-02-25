@@ -20,7 +20,7 @@ When invoked:
 - Business logic is NOT in Django models (models are persistence only)
 - Models have `related_name`, `Meta.ordering`, and `__str__`
 - Serializers are separated by action (list vs detail) with `read_only_fields`
-- Tests follow Arrange-Act-Assert with `test_happy_` / `test_error_` prefixes
+- Tests follow Arrange-Act-Assert with `test_*_happy_path` / `test_*_error` prefixes
 - Test descriptions and business comments are in Japanese
 - No security issues (SQL injection, XSS, exposed secrets)
 - Custom Fixit lint rules are respected
