@@ -23,6 +23,7 @@ When invoked:
 - Tests follow Arrange-Act-Assert with `test_*_happy_path` / `test_*_error` prefixes
 - Test descriptions and business comments are in Japanese
 - No security issues (SQL injection, XSS, exposed secrets)
+- No unbounded queries or in-memory list expansion of large datasets
 - Custom Fixit lint rules are respected
 
 ## Output format
