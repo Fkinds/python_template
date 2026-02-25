@@ -1,22 +1,22 @@
-# DDD × Clean Architecture レイヤー構成
+# DDD x Clean Architecture Layer Structure
 
-新規モジュールで DDD を採用する場合のレイヤー構成ガイド。
+Layer structure guide for modules adopting DDD.
 
-## レイヤー構成
+## Layer Structure
 
 ```
 module_name/
-├── domain/              # 最内側: 外部依存なし
-│   ├── entities/        # ドメインエンティティ
-│   ├── services/        # ドメインサービス
-│   └── (root modules)   # 値オブジェクト (attrs.frozen)
+├── domain/              # Innermost: no external dependencies
+│   ├── entities/        # Domain entities
+│   ├── services/        # Domain services
+│   └── (root modules)   # Value objects (attrs.frozen)
 │
-├── usecases/            # domain のみに依存
-│   ├── protocols/       # ポート (typing.Protocol)
-│   ├── _dto/            # データ転送オブジェクト
-│   └── adapters/        # ユースケース用アダプタ
+├── usecases/            # Depends only on domain
+│   ├── protocols/       # Ports (typing.Protocol)
+│   ├── _dto/            # Data transfer objects
+│   └── adapters/        # Use-case adapters
 │
-├── interfaces/          # 外部とのインターフェース
+├── interfaces/          # External-facing layer
 │   ├── serializers/
 │   ├── deserializers/
 │   ├── repositories/
@@ -25,38 +25,40 @@ module_name/
 │   ├── routing/
 │   └── management/commands/
 │
-└── infrastructure/      # 最外側: 全レイヤー参照可
-    ├── containers/      # DI コンテナ (Composition Root)
-    ├── adapters/        # 外部サービス実装
-    └── factories/       # インフラ用ファクトリ
+└── infrastructure/      # Outermost: may reference all layers
+    ├── containers/      # DI containers (Composition Root)
+    ├── adapters/        # External service implementations
+    └── factories/       # Infrastructure factories
 ```
 
-## 依存方向
+## Dependency Direction
 
 ```
 domain ← usecases ← interfaces ← infrastructure
 ```
 
-- domain: 標準ライブラリ + attrs のみ
-- usecases: domain のみ import
-- interfaces: domain + usecases を import
-- infrastructure/adapters: Protocol を暗黙的に満たす
-- infrastructure/containers: 全レイヤー参照 OK (Composition Root)
+| Layer | Allowed Imports |
+|---|---|
+| domain | stdlib + `attrs` only |
+| usecases | domain only |
+| interfaces | domain + usecases |
+| infrastructure/adapters | Implicitly satisfies Protocols |
+| infrastructure/containers | All layers (Composition Root) |
 
-## ライブラリ使い分け
+## Library Mapping
 
-| 用途 | ライブラリ | 場所 |
-|------|-----------|------|
-| 値オブジェクト / ドメインイベント | `attrs.frozen` | domain/ |
-| シリアライザ | `attrs` | interfaces/serializers/ |
-| DTO (境界での変換) | `pydantic` | usecases/_dto/ |
-| ポート | `typing.Protocol` | usecases/protocols/ |
+| Purpose | Library | Location |
+|---|---|---|
+| Value objects / domain events | `attrs.frozen` | domain/ |
+| Serializers | `attrs` | interfaces/serializers/ |
+| DTOs (boundary conversion) | `pydantic` | usecases/_dto/ |
+| Ports | `typing.Protocol` | usecases/protocols/ |
 
-## ルール
+## Rules
 
-- YAGNI: 必要なレイヤー・ディレクトリだけ作成する
-- 値オブジェクトは `attrs.frozen(kw_only=True)`
-- DTO は `pydantic.BaseModel` (バリデーション + シリアライズ)
-- ポートは `typing.Protocol`
-- Protocol を満たす具象クラスには `*Impl` サフィックスを付ける
-- ユースケース関数はキーワード引数のみ
+- YAGNI: only create layers and directories as needed
+- Value objects: `attrs.frozen(kw_only=True)`
+- DTOs: `pydantic.BaseModel` (validation + serialization)
+- Ports: `typing.Protocol`
+- Concrete classes implementing a Protocol: `*Impl` suffix
+- Use-case functions: keyword-only arguments
