@@ -209,6 +209,50 @@ dev = [
     "moto[s3]",
 ]
 
+[tool.importlinter]
+root_packages = [
+    "config",
+    "common",
+    "authors",
+    "books",
+    "notifications",
+]
+include_external_packages = true
+
+[[tool.importlinter.contracts]]
+name = "Notifications DDD layers"
+type = "layers"
+layers = [
+    "notifications.infrastructure",
+    "notifications.usecases",
+    "notifications.domain",
+]
+
+[[tool.importlinter.contracts]]
+name = "Common DDD layers"
+type = "layers"
+layers = [
+    "common.infrastructure",
+    "common.interfaces",
+    "common.usecases",
+    "common.domain",
+]
+
+[[tool.importlinter.contracts]]
+name = "Domain layer purity"
+type = "forbidden"
+source_modules = [
+    "notifications.domain",
+    "common.domain",
+]
+forbidden_modules = [
+    "django",
+    "rest_framework",
+    "injector",
+    "pydantic",
+    "httpx",
+]
+
 [build-system]
 requires = ["setuptools>=42", "wheel"]
 build-backend = "setuptools.build_meta"
