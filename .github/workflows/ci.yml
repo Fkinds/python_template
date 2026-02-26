@@ -116,6 +116,37 @@ jobs:
           python-version: ${{ env.PYTHON_VERSION }}
       - run: uv run pytest tests/integration --maxfail=1 --disable-warnings -q --no-cov
 
+  linting_test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: uv run pytest tests/linting --numprocesses auto --no-cov
+
+  django_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: uv run python -m django check --fail-level WARNING
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.dev
+
+  migration_check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: uv run python -m django makemigrations --check --dry-run
+        env:
+          DJANGO_SETTINGS_MODULE: config.settings.dev
+
   coverage:
     runs-on: ubuntu-latest
     services:
