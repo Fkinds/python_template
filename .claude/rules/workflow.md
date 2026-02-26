@@ -41,7 +41,8 @@ Never mark a task complete without proving it works:
   `uv run ruff check src tests &&
    uv run ruff format --check src tests &&
    uv run mypy src &&
-   uv run fixit lint src tests`
+   uv run fixit lint src tests &&
+   uv run lint-imports`
 - Diff behavior between main and your changes when relevant
 - Ask yourself: "Would a staff engineer approve this?"
 

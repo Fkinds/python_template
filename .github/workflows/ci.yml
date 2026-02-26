@@ -38,6 +38,15 @@ jobs:
           restore-keys: fixit-
       - run: uv run fixit lint src tests
 
+  lint-imports:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-python-env
+        with:
+          python-version: ${{ env.PYTHON_VERSION }}
+      - run: uv run lint-imports
+
   mypy:
     runs-on: ubuntu-latest
     steps:
