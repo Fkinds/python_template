@@ -6,4 +6,8 @@ urlpatterns = [
     path("admin/", admin.site.urls),
     path("api/", include("authors.urls")),
     path("api/", include("books.urls")),
+    path(
+        "api/",
+        include("notifications.infrastructure.routing.urls"),
+    ),
 ]

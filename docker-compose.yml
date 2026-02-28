@@ -11,6 +11,8 @@ services:
         condition: service_healthy
       rustfs:
         condition: service_healthy
+      elasticsearch:
+        condition: service_healthy
     environment:
       DJANGO_SETTINGS_MODULE: config.settings.prod
       POSTGRES_HOST: db
@@ -21,6 +23,7 @@ services:
       S3_ACCESS_KEY: rustfsadmin
       S3_SECRET_KEY: rustfsadmin
       S3_BUCKET_NAME: media
+      ELASTICSEARCH_URL: http://elasticsearch:9200
 
   db:
     image: postgres:16
@@ -60,6 +63,26 @@ services:
       timeout: 5s
       retries: 5
 
+  elasticsearch:
+    image: elasticsearch:8.17.0
+    container_name: elasticsearch
+    restart: always
+    ports:
+      - "9200:9200"
+    environment:
+      discovery.type: single-node
+      xpack.security.enabled: "false"
+      ES_JAVA_OPTS: "-Xms256m -Xmx256m"
+    volumes:
+      - elasticsearch_data:/usr/share/elasticsearch/data
+    healthcheck:
+      test: >-
+        curl -so /dev/null http://localhost:9200/ || exit 1
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
 volumes:
   postgres_data:
   rustfs_data:
+  elasticsearch_data:

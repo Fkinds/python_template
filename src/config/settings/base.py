@@ -120,7 +120,17 @@ STORAGES = {
 
 MEDIA_URL = f"{S3_ENDPOINT_URL}/{S3_BUCKET_NAME}/"
 
-# ---- Discord Notifications ----
+# ---- Elasticsearch ----
+ELASTICSEARCH_URL: str = env(
+    "ELASTICSEARCH_URL",
+    default="http://localhost:9200",
+)
+
+# ---- Notifications ----
+NOTIFICATION_CHANNEL: str = env(
+    "NOTIFICATION_CHANNEL",
+    default="console",
+)
 DISCORD_WEBHOOK_URL: str = env(
     "DISCORD_WEBHOOK_URL",
     default="",
