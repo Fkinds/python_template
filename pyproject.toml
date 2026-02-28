@@ -13,6 +13,7 @@ dependencies = [
     "django-environ>=0.12",
     "django-storages[s3]>=1.14",
     "djangorestframework>=3.16",
+    "elasticsearch>=8.17,<9",
     "httpx>=0.28",
     "injector>=0.22.0",
     "fixit>=2.1.0",
@@ -155,6 +156,10 @@ ignore_missing_imports = true
 module = "injector"
 ignore_missing_imports = true
 
+[[tool.mypy.overrides]]
+module = "elasticsearch"
+ignore_missing_imports = true
+
 [tool.pytest.ini_options]
 DJANGO_SETTINGS_MODULE = "config.settings.dev"
 pythonpath = ["src"]
@@ -182,7 +187,8 @@ exclude_lines = [
     "if TYPE_CHECKING:",
 ]
 
-[tool.ty]
+[tool.ty.rules]
+unused-type-ignore-comment = "ignore"
 
 [tool.ty.environment]
 python-version = "3.14"
@@ -224,6 +230,7 @@ name = "Notifications DDD layers"
 type = "layers"
 layers = [
     "notifications.infrastructure",
+    "notifications.interfaces",
     "notifications.usecases",
     "notifications.domain",
 ]

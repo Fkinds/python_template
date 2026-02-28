@@ -15,6 +15,12 @@ from rest_framework.test import APIClient
 
 from authors.models import Author
 from books.entities import Book
+from notifications.infrastructure.adapters.fake import (
+    FakeNotificationLogReader,
+)
+from notifications.infrastructure.adapters.fake import (
+    FakeNotificationLogWriter,
+)
 from notifications.infrastructure.adapters.fake import FakeNotifier
 from notifications.infrastructure.containers.notificaton import (
     NotificationModule,
@@ -62,7 +68,11 @@ def fake_notifier() -> Generator[FakeNotifier]:
     """テスト用の FakeNotifier を DI に差し込む."""
     notifier = FakeNotifier()
     container.override(
-        NotificationModule(notifier_override=notifier),
+        NotificationModule(
+            notifier_override=notifier,
+            log_writer_override=(FakeNotificationLogWriter()),
+            log_reader_override=(FakeNotificationLogReader()),
+        ),
     )
     yield notifier
     container.reset()
