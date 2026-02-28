@@ -8,6 +8,7 @@ ci:
           - ".github/**"
           - "docker-compose.yml"
           - "Dockerfile"
+          - "trivy.yaml"
 
 test:
   - changed-files:
