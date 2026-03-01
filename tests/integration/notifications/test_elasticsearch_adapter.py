@@ -1,8 +1,12 @@
-from datetime import UTC
-from datetime import datetime
-from unittest.mock import MagicMock
+"""Elasticsearch 通知履歴アダプタの統合テスト.
 
-from common.infrastructure.factories.logger import LoggerFactoryImpl
+実際の Elasticsearch インスタンスに対してアダプタの動作を検証する.
+"""
+
+import time
+
+from elasticsearch import Elasticsearch
+
 from notifications.domain.event_type import EventType
 from notifications.domain.notification_channel import NotificationChannel
 from notifications.domain.notification_status import NotificationStatus
@@ -13,80 +17,29 @@ from notifications.infrastructure.adapters.elasticsearch import (
     ElasticsearchNotificationLogWriterImpl,
 )
 
-_factory = LoggerFactoryImpl()
+_Writer = ElasticsearchNotificationLogWriterImpl
+_Reader = ElasticsearchNotificationLogReaderImpl
+
+_INDEX_NAME = "notification_logs"
 
 
-def _mock_client(index_exists: bool = True) -> MagicMock:
-    """テスト用の Elasticsearch クライアント mock."""
-    client = MagicMock()
-    client.indices.exists.return_value = index_exists
-    return client
+def _refresh_index(client: Elasticsearch) -> None:
+    """検索で最新データが返るようにインデックスをリフレッシュする."""
+    if client.indices.exists(index=_INDEX_NAME):
+        client.indices.refresh(index=_INDEX_NAME)
 
 
 class TestElasticsearchNotificationLogWriterImpl:
-    """ES 書き込みアダプタのテスト."""
+    """ES 書き込みアダプタの統合テスト."""
 
-    def test_happy_ensure_index_creates_when_missing(
+    def test_happy_save_creates_index_and_document(
         self,
+        es_client: Elasticsearch,
+        es_writer: _Writer,
     ) -> None:
-        """初回 save 時にインデックスが作成されること."""
-        # Arrange
-        client = _mock_client(index_exists=False)
-        writer = ElasticsearchNotificationLogWriterImpl(
-            client=client,
-            logger_factory=_factory,
-        )
-
+        """save でインデックスが作成されドキュメントが保存されること."""
         # Act
-        writer.save(
-            event_type=EventType.BOOK_CREATED,
-            message="テスト",
-            status=NotificationStatus.SUCCESS,
-            detail="",
-            recipient="discord",
-            channel=NotificationChannel.DISCORD,
-            retry_count=0,
-        )
-
-        # Assert
-        client.indices.create.assert_called_once()
-
-    def test_happy_ensure_index_skips_when_exists(
-        self,
-    ) -> None:
-        """インデックスが存在する場合は作成しないこと."""
-        # Arrange
-        client = _mock_client(index_exists=True)
-        writer = ElasticsearchNotificationLogWriterImpl(
-            client=client,
-            logger_factory=_factory,
-        )
-
-        # Act
-        writer.save(
-            event_type=EventType.BOOK_CREATED,
-            message="テスト",
-            status=NotificationStatus.SUCCESS,
-            detail="",
-            recipient="discord",
-            channel=NotificationChannel.DISCORD,
-            retry_count=0,
-        )
-
-        # Assert
-        client.indices.create.assert_not_called()
-
-    def test_happy_save_indexes_document(self) -> None:
-        """save でドキュメントが index されること."""
-        # Arrange
-        client = _mock_client()
-        writer = ElasticsearchNotificationLogWriterImpl(
-            client=client,
-            logger_factory=_factory,
-        )
-
-        # Act
-        writer.save(
+        es_writer.save(
             event_type=EventType.BOOK_CREATED,
             message="本が登録されました",
             status=NotificationStatus.SUCCESS,
@@ -97,127 +50,210 @@ class TestElasticsearchNotificationLogWriterImpl:
         )
 
         # Assert
-        client.index.assert_called_once()
-        call_kwargs = client.index.call_args
-        assert call_kwargs.kwargs["index"] == "notification_logs"
-        body = call_kwargs.kwargs["body"]
-        assert body["event_type"] == "book_created"
-        assert body["status"] == "success"
+        assert es_client.indices.exists(
+            index=_INDEX_NAME,
+        )
+        _refresh_index(client=es_client)
+        result = es_client.search(
+            index=_INDEX_NAME,
+            body={"query": {"match_all": {}}},
+        )
+        assert result["hits"]["total"]["value"] == 1
+        doc = result["hits"]["hits"][0]["_source"]
+        assert doc["event_type"] == "book_created"
+        assert doc["message"] == "本が登録されました"
+        assert doc["status"] == "success"
+
+    def test_happy_save_multiple_documents(
+        self,
+        es_client: Elasticsearch,
+        es_writer: _Writer,
+    ) -> None:
+        """複数回の save でドキュメントが追加されること."""
+        # Act
+        es_writer.save(
+            event_type=EventType.BOOK_CREATED,
+            message="1件目",
+            status=NotificationStatus.SUCCESS,
+            detail="",
+            recipient="discord",
+            channel=NotificationChannel.DISCORD,
+            retry_count=0,
+        )
+        es_writer.save(
+            event_type=EventType.AUTHOR_CREATED,
+            message="2件目",
+            status=NotificationStatus.FAILURE,
+            detail="タイムアウト",
+            recipient="console",
+            channel=NotificationChannel.CONSOLE,
+            retry_count=1,
+        )
+
+        # Assert
+        _refresh_index(client=es_client)
+        result = es_client.search(
+            index=_INDEX_NAME,
+            body={"query": {"match_all": {}}},
+        )
+        assert result["hits"]["total"]["value"] == 2
 
 
 class TestElasticsearchNotificationLogReaderImpl:
-    """ES 読み取りアダプタのテスト."""
+    """ES 読み取りアダプタの統合テスト."""
 
     def test_happy_find_all_returns_paginated_results(
         self,
+        es_client: Elasticsearch,
+        es_writer: _Writer,
+        es_reader: _Reader,
     ) -> None:
-        """find_all がページネーション付き結果を返すこと."""
+        """find_all がページネーション付きで結果を返すこと."""
         # Arrange
-        client = _mock_client()
-        client.search.return_value = {
-            "hits": {
-                "total": {"value": 1},
-                "hits": [
-                    {
-                        "_id": "doc-1",
-                        "_source": {
-                            "event_type": "book_created",
-                            "message": "テスト",
-                            "status": "success",
-                            "detail": "",
-                            "recipient": "discord",
-                            "channel": "discord",
-                            "retry_count": 0,
-                            "created_at": "2026-01-01T00:00:00+00:00",
-                        },
-                    }
-                ],
-            }
-        }
-        reader = ElasticsearchNotificationLogReaderImpl(
-            client=client,
-            logger_factory=_factory,
+        es_writer.save(
+            event_type=EventType.BOOK_CREATED,
+            message="テスト通知",
+            status=NotificationStatus.SUCCESS,
+            detail="詳細",
+            recipient="discord",
+            channel=NotificationChannel.DISCORD,
+            retry_count=0,
         )
+        _refresh_index(client=es_client)
 
         # Act
-        logs, total = reader.find_all(page=1, page_size=10)
+        logs, total = es_reader.find_all(
+            page=1,
+            page_size=10,
+        )
 
         # Assert
         assert total == 1
         assert len(logs) == 1
-        assert logs[0].id == "doc-1"
         assert logs[0].event_type == "book_created"
-        assert logs[0].created_at == datetime(2026, 1, 1, tzinfo=UTC)
+        assert logs[0].message == "テスト通知"
+        assert logs[0].status == "success"
+        assert logs[0].channel == "discord"
+
+    def test_happy_find_all_pagination_offset(
+        self,
+        es_client: Elasticsearch,
+        es_writer: _Writer,
+        es_reader: _Reader,
+    ) -> None:
+        """ページ指定で正しいオフセットが適用されること."""
+        # Arrange — 3件保存、page_size=2 で page=2 は残り1件
+        for i in range(3):
+            es_writer.save(
+                event_type=EventType.BOOK_CREATED,
+                message=f"通知 {i}",
+                status=NotificationStatus.SUCCESS,
+                detail="",
+                recipient="discord",
+                channel=NotificationChannel.DISCORD,
+                retry_count=0,
+            )
+            time.sleep(0.01)
+        _refresh_index(client=es_client)
+
+        # Act
+        logs, total = es_reader.find_all(
+            page=2,
+            page_size=2,
+        )
+
+        # Assert
+        assert total == 3
+        assert len(logs) == 1
 
     def test_happy_find_by_id_returns_entity(
         self,
+        es_client: Elasticsearch,
+        es_writer: _Writer,
+        es_reader: _Reader,
     ) -> None:
         """find_by_id が指定IDのエンティティを返すこと."""
         # Arrange
-        client = _mock_client()
-        client.get.return_value = {
-            "_id": "doc-1",
-            "_source": {
-                "event_type": "author_created",
-                "message": "著者が登録されました",
-                "status": "success",
-                "detail": "",
-                "recipient": "console",
-                "channel": "console",
-                "retry_count": 0,
-                "created_at": "2026-01-01T00:00:00+00:00",
-            },
-        }
-        reader = ElasticsearchNotificationLogReaderImpl(
-            client=client,
-            logger_factory=_factory,
+        es_writer.save(
+            event_type=EventType.AUTHOR_CREATED,
+            message="著者が登録されました",
+            status=NotificationStatus.SUCCESS,
+            detail="",
+            recipient="console",
+            channel=NotificationChannel.CONSOLE,
+            retry_count=0,
         )
+        _refresh_index(client=es_client)
+        search_result = es_client.search(
+            index=_INDEX_NAME,
+            body={"query": {"match_all": {}}},
+        )
+        doc_id: str = search_result["hits"]["hits"][0]["_id"]
 
         # Act
-        result = reader.find_by_id(log_id="doc-1")
+        result = es_reader.find_by_id(log_id=doc_id)
 
         # Assert
         assert result is not None
-        assert result.id == "doc-1"
+        assert result.id == doc_id
+        assert result.event_type == "author_created"
+        assert result.message == "著者が登録されました"
         assert result.channel == "console"
+        assert result.recipient == "console"
+        assert result.retry_count == 0
+        assert result.created_at is not None
 
+    # lint-fixme: ParamLineBreak: 79文字制限で改行が必要
     def test_happy_find_by_id_returns_none_on_missing(
-        self,
+        self, es_reader: _Reader
     ) -> None:
         """存在しないIDの場合にNoneを返すこと."""
-        # Arrange
-        client = _mock_client()
-        client.get.side_effect = Exception("ドキュメント未検出")
-        reader = ElasticsearchNotificationLogReaderImpl(
-            client=client,
-            logger_factory=_factory,
-        )
-
         # Act
-        result = reader.find_by_id(log_id="nonexistent")
+        result = es_reader.find_by_id(
+            log_id="nonexistent-id-12345",
+        )
 
         # Assert
         assert result is None
 
-    def test_happy_find_all_pagination_offset(
+
+class TestElasticsearchRoundTrip:
+    """Writer → Reader のラウンドトリップテスト."""
+
+    def test_happy_write_then_read_round_trip(
         self,
+        es_client: Elasticsearch,
+        es_writer: _Writer,
+        es_reader: _Reader,
     ) -> None:
-        """find_all が正しい from 値で検索すること."""
+        """Writer で保存したデータが Reader で正確に取得できること."""
         # Arrange
-        client = _mock_client()
-        client.search.return_value = {
-            "hits": {"total": {"value": 0}, "hits": []}
-        }
-        reader = ElasticsearchNotificationLogReaderImpl(
-            client=client,
-            logger_factory=_factory,
+        es_writer.save(
+            event_type=EventType.BOOK_CREATED,
+            message="ラウンドトリップテスト",
+            status=NotificationStatus.FAILURE,
+            detail="テスト失敗詳細",
+            recipient="discord",
+            channel=NotificationChannel.DISCORD,
+            retry_count=3,
         )
+        _refresh_index(client=es_client)
 
         # Act
-        reader.find_all(page=3, page_size=5)
+        logs, total = es_reader.find_all(
+            page=1,
+            page_size=10,
+        )
 
         # Assert
-        call_kwargs = client.search.call_args
-        body = call_kwargs.kwargs["body"]
-        assert body["from"] == 10
-        assert body["size"] == 5
+        assert total == 1
+        assert len(logs) == 1
+        log = logs[0]
+        assert log.event_type == "book_created"
+        assert log.message == "ラウンドトリップテスト"
+        assert log.status == "failure"
+        assert log.detail == "テスト失敗詳細"
+        assert log.recipient == "discord"
+        assert log.channel == "discord"
+        assert log.retry_count == 3
+        assert log.created_at is not None
