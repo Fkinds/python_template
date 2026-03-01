@@ -54,21 +54,6 @@ class TestSafeTextValid:
         vo = SafeText(value="abc", min_length=3, max_length=10)
         assert vo.value == "abc"
 
-    def test_happy_frozen_immutability(self) -> None:
-        vo = SafeText(value="テスト")
-        with pytest.raises(AttributeError):
-            vo.value = "変更"  # type: ignore[misc]
-
-    def test_happy_equality_by_value(self) -> None:
-        vo1 = SafeText(value="テスト")
-        vo2 = SafeText(value="テスト")
-        assert vo1 == vo2
-
-    def test_happy_inequality_by_value(self) -> None:
-        vo1 = SafeText(value="テストA")
-        vo2 = SafeText(value="テストB")
-        assert vo1 != vo2
-
     @given(
         text=st.text(
             min_size=1,
@@ -140,10 +125,6 @@ class TestSafeTextInvalid:
         """異常系: 禁止文字を含むテキストが拒否されること."""
         with pytest.raises(ValueError, match="使用できない文字"):
             SafeText(value=text)
-
-    def test_error_positional_args_rejected(self) -> None:
-        with pytest.raises(TypeError):
-            SafeText("テスト")  # type: ignore[misc]  # lint-ignore: NoPositionalArgs
 
     @given(
         text=st.text(

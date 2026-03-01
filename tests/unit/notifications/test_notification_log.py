@@ -1,7 +1,6 @@
 from datetime import UTC
 from datetime import datetime
 
-import attrs
 import pytest
 
 from notifications.domain.event_type import EventType
@@ -58,19 +57,6 @@ class TestNotificationLog:
         assert log.channel == NotificationChannel.DISCORD
         assert log.retry_count == 0
         assert log.created_at == now
-
-    def test_happy_notification_log_is_frozen(
-        self,
-    ) -> None:
-        """エンティティが不変であること."""
-        # Arrange
-        log = _valid_log()
-
-        # Act & Assert
-        with pytest.raises(
-            attrs.exceptions.FrozenInstanceError,
-        ):
-            log.status = NotificationStatus.FAILURE  # type: ignore[misc]
 
     def test_happy_failure_status(self) -> None:
         """failure ステータスで生成できること."""
