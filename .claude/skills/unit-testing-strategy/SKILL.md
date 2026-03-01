@@ -98,6 +98,80 @@ Assign responsibilities across test phases.
 - UI rendering (→ E2E test)
 - Performance under load (→ load test)
 
+## Fixtures and Constructors
+
+Do not use fixtures to construct the system under test (SUT).
+Each test should create its own SUT directly.
+
+| Scenario | Fixture Use |
+|---|---|
+| Tests need different constructor args | **Forbidden** — construct in each test |
+| Integration test where all scenarios share the same instance | **Allowed as exception** |
+
+The canonical exception is a database connection. A shared
+base class may establish the connection in its constructor.
+
+## Act Phase
+
+The Act phase should ideally be **one line**. If it takes
+more than one line, consider whether the SUT's API could be
+better designed. This is a guideline, not an absolute rule
+— use judgment on a case-by-case basis.
+
+## Test Naming
+
+`method under test` + `precondition` + `expected result`
+
+The name should communicate **what is being verified** to
+a non-developer who understands the problem domain.
+
+## Parameterization
+
+| Scenario | Parameterize? |
+|---|---|
+| Happy path | Usually no |
+| Error cases with clear meaning | Yes |
+| Complex behavior | No — write individual tests |
+
+Splitting happy and error paths into separate parameterized
+tests is acceptable only when each parameter's meaning is
+self-evident.
+
+## Test Quality
+
+Test code must not be tightly coupled to **implementation
+details** of the SUT. Tests that depend on algorithms or
+internal logic steps are fragile.
+
+| Quality | What is verified |
+|---|---|
+| Good test | Is the final result correct? |
+| Bad test | Is the procedure correct? |
+
+**Always prefer black-box testing over white-box testing.**
+
+## Test Doubles
+
+| Kind | Direction | Purpose |
+|---|---|---|
+| Stub | Inward | Controls input to the SUT |
+| Mock | Outward | Verifies output from the SUT |
+
+- Verifying communication with stubs is an
+  **anti-pattern** (couples to implementation details)
+- Public API → verify observable behavior
+- Private API → implementation detail (do not verify)
+
+## Testing Approaches
+
+| Approach | Verifies | Priority |
+|---|---|---|
+| Output-value testing | Return values | **Highest** — simplest and least fragile |
+| State-based testing | Object state after operation | High |
+| Communication-based testing | Outgoing calls | Low — fragile due to mock dependency |
+
+Prefer output-value > state-based > communication-based.
+
 ## Rules
 
 - Test one behavior per test method, not one function
@@ -105,3 +179,7 @@ Assign responsibilities across test phases.
 - Delete tests that only verify implementation details
 - Do not unit-test infrastructure; use integration tests
 - Review test suites periodically for false positives
+- Act phase should ideally be a single line
+- Prefer black-box testing over white-box testing
+- Do not verify interactions with stubs
+- Prefer output-value testing over state-based testing
