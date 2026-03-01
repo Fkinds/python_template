@@ -13,9 +13,9 @@ class FakeNotifier:
         self._messages: list[str] = []
 
     @property
-    def messages(self) -> frozenset[str]:
-        """記録済みメッセージを不変セットで返す."""
-        return frozenset(self._messages)
+    def messages(self) -> tuple[str, ...]:
+        """記録済みメッセージを不変タプルで返す."""
+        return tuple(self._messages)
 
     def send(self, message: str) -> None:
         """メッセージをリストに記録する."""
