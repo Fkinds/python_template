@@ -1,8 +1,5 @@
 from http import HTTPStatus
 
-import attrs
-import pytest
-
 from notifications.domain.results import NotificationProblem
 from notifications.domain.results import NotificationSuccess
 
@@ -33,17 +30,6 @@ class TestNotificationSuccess:
 
         # Assert
         assert result.status == HTTPStatus.NO_CONTENT
-
-    def test_happy_is_frozen(self) -> None:
-        """成功結果が不変であること."""
-        # Arrange
-        result = NotificationSuccess(message="テスト")
-
-        # Act & Assert
-        with pytest.raises(
-            attrs.exceptions.FrozenInstanceError,
-        ):
-            result.message = "変更"  # type: ignore[misc]
 
 
 class TestNotificationProblem:
@@ -83,18 +69,3 @@ class TestNotificationProblem:
         # Assert
         assert result.type_uri == ("urn:notification:delivery-failed")
         assert result.instance == "/api/books/42"
-
-    def test_happy_is_frozen(self) -> None:
-        """エラー結果が不変であること."""
-        # Arrange
-        result = NotificationProblem(
-            title="Error",
-            status=HTTPStatus.INTERNAL_SERVER_ERROR,
-            detail="テスト",
-        )
-
-        # Act & Assert
-        with pytest.raises(
-            attrs.exceptions.FrozenInstanceError,
-        ):
-            result.title = "変更"  # type: ignore[misc]

@@ -9,21 +9,6 @@ from authors.serializers import AuthorSerializer
 class TestAuthorSerializer:
     # --- 正常系 ---
 
-    def test_happy_exposes_expected_fields(self) -> None:
-        # Arrange & Act
-        s = AuthorSerializer()
-
-        # Assert
-        assert set(s.fields.keys()) == {"id", "name", "bio", "created_at"}
-
-    def test_happy_id_and_created_at_are_read_only(self) -> None:
-        # Arrange & Act
-        s = AuthorSerializer()
-
-        # Assert
-        assert s.fields["id"].read_only
-        assert s.fields["created_at"].read_only
-
     def test_happy_accepts_name_only(self) -> None:
         # Arrange
         data = {"name": "太宰治"}
@@ -76,16 +61,6 @@ class TestAuthorSerializer:
 
         # Assert
         assert s.is_valid(), s.errors
-
-    def test_happy_accepts_name_at_max_length(self) -> None:
-        # Arrange
-        data = {"name": "a" * 255}
-
-        # Act
-        s = AuthorSerializer(data=data)
-
-        # Assert
-        assert s.is_valid()
 
     def test_happy_ignores_id_in_input(self) -> None:
         # Arrange

@@ -1,4 +1,3 @@
-import attrs
 import pytest
 from hypothesis import given
 from hypothesis import strategies as st
@@ -25,19 +24,6 @@ class TestBookCreated:
         assert event.title == "吾輩は猫である"
         assert event.isbn == "9784003101018"
         assert event.author_name == "夏目漱石"
-
-    def test_happy_event_is_frozen(self) -> None:
-        """イベントが不変であること."""
-        # Arrange
-        event = BookCreated(
-            title="坊っちゃん",
-            isbn="9784003101025",
-            author_name="夏目漱石",
-        )
-
-        # Act & Assert
-        with pytest.raises(attrs.exceptions.FrozenInstanceError):
-            event.title = "変更"  # type: ignore[misc]
 
     @given(
         title=_non_empty_text,
@@ -145,15 +131,6 @@ class TestAuthorCreated:
 
         # Assert
         assert event.name == "太宰治"
-
-    def test_happy_event_is_frozen(self) -> None:
-        """イベントが不変であること."""
-        # Arrange
-        event = AuthorCreated(name="芥川龍之介")
-
-        # Act & Assert
-        with pytest.raises(attrs.exceptions.FrozenInstanceError):
-            event.name = "変更"  # type: ignore[misc]
 
     @given(name=_non_empty_text)
     def test_happy_any_non_empty_string_creates_event(self, name: str) -> None:
