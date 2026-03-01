@@ -109,6 +109,22 @@ jobs:
 
   integration_test:
     runs-on: ubuntu-latest
+    services:
+      elasticsearch:
+        image: elasticsearch:8.17.0
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: "false"
+          ES_JAVA_OPTS: "-Xms256m -Xmx256m"
+        ports:
+          - 9200:9200
+        options: >-
+          --health-cmd="curl -so /dev/null http://localhost:9200/"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
+    env:
+      ELASTICSEARCH_URL: http://localhost:9200
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python-env
@@ -163,11 +179,25 @@ jobs:
           --health-interval=10s
           --health-timeout=5s
           --health-retries=5
+      elasticsearch:
+        image: elasticsearch:8.17.0
+        env:
+          discovery.type: single-node
+          xpack.security.enabled: "false"
+          ES_JAVA_OPTS: "-Xms256m -Xmx256m"
+        ports:
+          - 9200:9200
+        options: >-
+          --health-cmd="curl -so /dev/null http://localhost:9200/"
+          --health-interval=10s
+          --health-timeout=5s
+          --health-retries=10
     env:
       POSTGRES_HOST: localhost
       POSTGRES_DB: django_db
       POSTGRES_USER: django
       POSTGRES_PASSWORD: django
+      ELASTICSEARCH_URL: http://localhost:9200
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup-python-env
