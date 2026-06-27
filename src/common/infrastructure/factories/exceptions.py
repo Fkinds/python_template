@@ -1,7 +1,9 @@
 """ファクトリ層の例外クラス."""
 
+from common.domain.exceptions import AppError
 
-class FactoryError(Exception):
+
+class FactoryError(AppError):
     """ファクトリに関連するエラーの基底クラス."""
 
     pass

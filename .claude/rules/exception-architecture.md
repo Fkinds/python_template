@@ -6,20 +6,44 @@ Design guide for common base exception classes.
 
 ```
 Exception (stdlib)
-├── EntityError                    # Base for entity-related errors
-│   ├── EntityDoesNotExistError    # Entity not found
-│   └── GenerateRepositoryError    # Repository generation failed (see below)
-├── AdapterError                   # Base for adapter-related errors
-│   └── GenerateAdapterError       # Adapter generation failed
-├── FactoryError                   # Base for factory-related errors
-│   └── GenerateFactoryError       # Factory generation failed
-└── RepositoryError                # Base for repository-related errors (reserved)
+└── AppError                       # Apex of the pyramid (common/domain)
+    ├── EntityError                # Base for entity-related errors
+    │   ├── EntityDoesNotExistError    # Entity not found
+    │   └── GenerateRepositoryError    # Repository generation failed (see below)
+    ├── AdapterError               # Base for adapter-related errors
+    │   └── GenerateAdapterError       # Adapter generation failed
+    ├── FactoryError               # Base for factory-related errors
+    │   └── GenerateFactoryError       # Factory generation failed
+    └── RepositoryError            # Base for repository-related errors (reserved)
 ```
+
+All application exceptions inherit from a single apex `AppError`
+(`common/domain/exceptions.py`, stdlib only). A single DRF
+`EXCEPTION_HANDLER` (`common/infrastructure/exception_handler.py`) maps
+the pyramid to RFC 9457 problem+json, so nothing leaks uncaught and
+nothing is silently swallowed.
+
+## HTTP Mapping (exception_handler)
+
+| Exception | HTTP | Notes |
+|---|---|---|
+| `EntityDoesNotExistError` | 404 | Not found |
+| `EntityError` (incl. `GenerateRepositoryError`) | 422 | Invalid entity |
+| `AdapterError` | 502 | External service failure |
+| `FactoryError` / `RepositoryError` | 500 | Server fault |
+| unclassified `AppError` | 500 | Safe default |
+| DRF `APIException` | DRF default | Delegated |
+| unknown `Exception` | 500 | Caught + logged, generic body |
+
+- 4xx: the exception message is exposed in `detail`.
+- 5xx: `detail` is left empty; full error + traceback is logged
+  server-side only (no internal leakage).
 
 ## Definition Locations
 
 | Directory | base.py | exceptions.py |
 |---|---|---|
+| `common/domain/` | — | AppError (apex) |
 | `common/domain/entities/` | Entity, ValueObject | EntityError, EntityDoesNotExistError, GenerateRepositoryError |
 | `common/infrastructure/adapters/` | Adapter | AdapterError, GenerateAdapterError |
 | `common/infrastructure/factories/` | Factory | FactoryError, GenerateFactoryError |
