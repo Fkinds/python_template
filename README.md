@@ -103,6 +103,17 @@ uv run python src/manage.py runserver
 > Access the API at `http://localhost:8000`.
 > You can also run `docker compose up` to start all services at once.
 
+## API Documentation
+
+The API schema is auto-generated with
+[drf-spectacular](https://drf-spectacular.readthedocs.io/) (OpenAPI 3).
+
+| Tool | URL | Description |
+|:--|:--|:--|
+| Swagger UI | `http://localhost:8000/api/v1/docs/` | Interactive API explorer |
+| ReDoc | `http://localhost:8000/api/v1/redoc/` | Reference documentation |
+| Schema | `http://localhost:8000/api/v1/schema/` | OpenAPI schema (YAML) |
+
 ## Object Storage (RustFS)
 
 [RustFS](https://rustfs.com/) provides S3-compatible object storage
