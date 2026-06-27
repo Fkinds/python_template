@@ -245,11 +245,22 @@ layers = [
 ]
 
 [[tool.importlinter.contracts]]
+name = "Authors DDD layers"
+type = "layers"
+layers = [
+    "authors.infrastructure",
+    "authors.interfaces",
+    "authors.usecases",
+    "authors.domain",
+]
+
+[[tool.importlinter.contracts]]
 name = "Domain layer purity"
 type = "forbidden"
 source_modules = [
     "notifications.domain",
     "common.domain",
+    "authors.domain",
 ]
 forbidden_modules = [
     "django",

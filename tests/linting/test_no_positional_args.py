@@ -102,7 +102,8 @@ class TestNoPositionalArgsInvalid:
 
     def test_authors_module_also_checked(self, config: Config) -> None:
         code = (
-            "from authors.serializers import AuthorSerializer\n"
+            "from authors.interfaces.serializers.author import "
+            "AuthorSerializer\n"
             "AuthorSerializer('data')\n"
         )
         messages = _lint(code, config)

@@ -12,7 +12,7 @@ from django.urls import include
 from django.urls import path
 
 urlpatterns = [
-    path("", include("authors.urls")),
+    path("", include("authors.infrastructure.routing.urls")),
     path("", include("books.urls")),
     path("", include("notifications.infrastructure.routing.urls")),
 ]

@@ -6,6 +6,12 @@ from hypothesis import strategies as st
 from rest_framework import status
 from rest_framework.test import APIClient
 
+from authors.domain.entities.author import Author as AuthorEntity
+from authors.infrastructure.adapters.fake import FakeAuthorRepository
+from authors.infrastructure.containers.author import AuthorModule
+from authors.infrastructure.containers.author import (
+    container as author_container,
+)
 from authors.models import Author
 from notifications.infrastructure.adapters.fake import FakeNotifier
 from notifications.infrastructure.containers.notificaton import (
@@ -39,6 +45,16 @@ class TestAuthorListCreate:
         # Assert
         assert response.status_code == status.HTTP_200_OK
         assert response.data["count"] == 1
+
+    def test_error_list_rejects_non_numeric_page(
+        self, api_client: APIClient, db: Any
+    ) -> None:
+        """異常系: 数値でない page は 400 になること (500 にしない)."""
+        # Act
+        response = api_client.get(f"{self.endpoint}?page=abc")
+
+        # Assert
+        assert response.status_code == status.HTTP_400_BAD_REQUEST
 
     def test_happy_create_author_with_bio(
         self, api_client: APIClient, db: Any
@@ -306,6 +322,36 @@ class TestAuthorRetrieveUpdateDelete:
         # Assert
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "name" in response.data
+
+
+@pytest.mark.django_db
+class TestAuthorDependencyInjection:
+    """DI で著者リポジトリを差し替えられることの検証."""
+
+    endpoint = "/api/v1/authors/"
+
+    def test_happy_list_uses_injected_fake_repository(
+        self, api_client: APIClient, db: Any
+    ) -> None:
+        """DI で差し替えた Fake リポジトリの内容が返ること (実体不使用)."""
+        # Arrange
+        seeded = AuthorEntity(name="フェイク著者", bio="DI 差し替え")
+        author_container.override(
+            AuthorModule(
+                repository_override=FakeAuthorRepository(authors=[seeded]),
+            ),
+        )
+
+        # Act
+        try:
+            response = api_client.get(self.endpoint)
+        finally:
+            author_container.reset()
+
+        # Assert
+        assert response.status_code == status.HTTP_200_OK
+        assert response.data["count"] == 1
+        assert response.data["results"][0]["name"] == "フェイク著者"
 
 
 @pytest.mark.django_db
