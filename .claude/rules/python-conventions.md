@@ -76,6 +76,18 @@ the `code-quality` and `unit-testing-strategy` skills.
 - See the `test-code-quality` and `unit-testing-strategy`
   skills for the full doubles taxonomy.
 
+## 6. Language Gotchas
+
+- Never use a mutable default argument (`def f(x=[])`). The
+  default is evaluated once and shared across every call. Use
+  `x=None` and build the default inside the body.
+- Compare to `None` with `is` / `is not`, never `==` (it is a
+  singleton; compare identity).
+- Test truthiness directly (`if flag:` / `if not items:`), not
+  `== True` or `len(...) == 0`.
+- See the `code-quality` skill for examples and f-string vs
+  lazy-logging formatting.
+
 ## Rules
 
 - Immutable objects: `frozen` + `@property`, no setters,
@@ -91,3 +103,5 @@ the `code-quality` and `unit-testing-strategy` skills.
   mandatory
 - Treat heavy `mock.patch` usage as a design smell → introduce
   DI + Stub / Fake
+- No mutable default arguments; compare to `None` with `is`;
+  test truthiness directly

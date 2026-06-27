@@ -34,6 +34,46 @@ refactoring.
 | Duplicated object construction logic | **Factory** | Centralize creation in a factory class |
 | Business logic in views or models | **Use Case + Repository** | Move logic to use case; data access to repository |
 
+## Abstraction & Typing Choices
+
+### Protocol vs ABC
+
+| Use | Choice | Why |
+|---|---|---|
+| Define a port a layer depends on | `typing.Protocol` | Structural — implementers need not import or inherit; type checked statically |
+| Retro-fit a type you do not own | `Protocol` | Conformance is by shape, addable after the fact |
+| Force subclasses to implement at runtime | `abc.ABC` | Instantiating an incomplete subclass raises immediately |
+
+This project's ports are Protocols in `usecases/protocols/`;
+reach for `ABC` only when runtime enforcement of a base class
+is genuinely required.
+
+### Variance (generic parameters)
+
+| Position | Variance | Example |
+|---|---|---|
+| Output / return | covariant | a `Producer[Cat]` is a `Producer[Animal]` |
+| Input / consume | contravariant | a `Consumer[Animal]` is a `Consumer[Cat]` |
+| Mutable container | invariant | `list[Cat]` is **not** `list[Animal]` |
+
+Type read-only producers covariant, sink-only consumers
+contravariant, and anything mutable invariant.
+
+### Mixin initialization
+
+A mixin in a cooperative MRO must call
+`super().__init__(**kwargs)` — skipping it silently drops the
+rest of the chain's initialization. Pass `**kwargs` through so
+every base in the MRO is initialized.
+
+## Design Signals From Tests
+
+| Test pain | Hidden design problem | Pattern |
+|---|---|---|
+| Want to test a private method directly | A second responsibility is buried inside | Extract it into its own class (Use Case / Value Object) |
+| Many `mock.patch` to construct the SUT | Dependencies hard-wired, no seam | Inject a Protocol (Port) via DI |
+| Domain test needs a DB | Logic leaked into the repository | Pull logic into a pure domain function |
+
 ## Rules
 
 - Only introduce a pattern when a code smell justifies it (YAGNI)

@@ -105,6 +105,36 @@ def test_error_rejects_missing_field(
     ...
 ```
 
+### Parametrize Pitfalls
+
+`parametrize` compresses similar cases, but misused it hides
+intent. Split instead of cramming.
+
+| Pitfall | Why it hurts | Fix |
+|---|---|---|
+| Meaningless cartesian product | N×M rows explode, most combinations test nothing new | Enumerate only the meaningful cases |
+| Mixing happy + error in one set | Reader cannot tell which rows assert success vs failure | Separate `test_happy_*` and `test_error_*` |
+| Act / Assert branches per param | An `if param: ... else: ...` body is two tests in disguise | Write distinct test methods |
+| Opaque `ids` | `ids=["1", "2"]` says nothing at failure time | Name the scenario (`"missing_title"`) |
+
+Parametrize only when every row exercises the **same Act and
+Assert shape** and each `id` is self-evident.
+
+## Implementation Detail Is Not a Test Target
+
+Test the observable outcome, never how the SUT got there.
+Asserting on internals makes tests fail on safe refactors.
+
+| Anti-pattern | Why fragile | Test instead |
+|---|---|---|
+| `mock.assert_called_once()` on a collaborator | Couples to call count, not behavior | The output / side effect the caller sees |
+| Asserting a private method ran | Privates are free to change | The public result that private produced |
+| Re-deriving the SUT's formula in the assert | Test mirrors the code; both wrong together | A hand-computed expected value |
+| Wanting to test a private method directly | Signals a hidden responsibility | Extract it to its own class, test that |
+
+If a single test needs **two Act lines** (two calls to the
+SUT), it is verifying two behaviors — split it.
+
 ## Hypothesis / Property-Based Testing
 
 Use `@given` to verify properties hold for arbitrary inputs.
