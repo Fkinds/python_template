@@ -195,7 +195,7 @@ class TestElasticsearchNotificationLogReaderImpl:
 
         # Assert
         assert result is not None
-        assert result.id == doc_id
+        assert str(result.id) == doc_id
         assert result.event_type == "author_created"
         assert result.message == "著者が登録されました"
         assert result.channel == "console"

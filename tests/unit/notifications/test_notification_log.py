@@ -1,3 +1,4 @@
+import uuid
 from datetime import UTC
 from datetime import datetime
 
@@ -8,11 +9,13 @@ from notifications.domain.notification_channel import NotificationChannel
 from notifications.domain.notification_log import NotificationLog
 from notifications.domain.notification_status import NotificationStatus
 
+_VALID_ID = uuid.UUID("0192f0a0-0000-7000-8000-000000000001")
+
 
 def _valid_log(**overrides: object) -> NotificationLog:
     """テスト用の有効な NotificationLog を生成するヘルパー."""
     defaults: dict[str, object] = {
-        "id": "abc123",
+        "id": _VALID_ID,
         "event_type": EventType.BOOK_CREATED,
         "message": "本が登録されました: テスト",
         "status": NotificationStatus.SUCCESS,
@@ -23,6 +26,9 @@ def _valid_log(**overrides: object) -> NotificationLog:
         "created_at": datetime(2026, 1, 1, tzinfo=UTC),
     }
     defaults.update(overrides)
+    # id=None を渡したときは省略し、基底クラスの uuid7 自動採番に委ねる。
+    if defaults.get("id", _VALID_ID) is None:
+        del defaults["id"]
     return NotificationLog(**defaults)  # type: ignore[arg-type]
 
 
@@ -36,7 +42,7 @@ class TestNotificationLog:
 
         # Act
         log = NotificationLog(
-            id="abc123",
+            id=_VALID_ID,
             event_type=EventType.BOOK_CREATED,
             message="本が登録されました: テスト",
             status=NotificationStatus.SUCCESS,
@@ -48,7 +54,7 @@ class TestNotificationLog:
         )
 
         # Assert
-        assert log.id == "abc123"
+        assert log.id == _VALID_ID
         assert log.event_type == EventType.BOOK_CREATED
         assert log.message == "本が登録されました: テスト"
         assert log.status == NotificationStatus.SUCCESS
@@ -97,19 +103,31 @@ class TestNotificationLog:
         with pytest.raises(ValueError, match="NotificationChannel"):
             _valid_log(channel="slack")
 
+    def test_happy_auto_generates_uuid_id(self) -> None:
+        """id を省略すると uuid7 が自動採番されること."""
+        # Act
+        log1 = _valid_log(id=None)
+        log2 = _valid_log(id=None)
+
+        # Assert
+        assert isinstance(log1.id, uuid.UUID)
+        assert log1.id != log2.id
+
+    def test_error_rejects_non_uuid_id(self) -> None:
+        """UUID 以外の id が拒否されること."""
+        # Act & Assert
+        with pytest.raises(TypeError, match="id"):
+            _valid_log(id="not-a-uuid")
+
     @pytest.mark.parametrize(
         ("field", "value"),
         [
-            ("id", ""),
-            ("id", "   "),
             ("message", ""),
             ("message", "\t"),
             ("recipient", ""),
             ("recipient", " "),
         ],
         ids=[
-            "empty_id",
-            "blank_id",
             "empty_message",
             "blank_message",
             "empty_recipient",

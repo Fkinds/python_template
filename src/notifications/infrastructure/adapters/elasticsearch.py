@@ -1,10 +1,12 @@
 """Elasticsearch を使った通知履歴アダプタ."""
 
+import uuid
 from datetime import UTC
 from datetime import datetime
 from typing import Any
 
 from elasticsearch import Elasticsearch
+from elasticsearch import NotFoundError
 
 from common.infrastructure.adapters.base import Adapter
 from common.usecases.protocols import LoggerFactory
@@ -82,8 +84,10 @@ class ElasticsearchNotificationLogWriterImpl(Adapter):
             "created_at": datetime.now(tz=UTC).isoformat(),
         }
         self._ensure_index()
+        # 同一性は uuid7 で採番し、ES のドキュメント ID として str で保存する。
         self._client.index(
             index=_INDEX_NAME,
+            id=str(uuid.uuid7()),
             body=doc,
         )
 
@@ -130,7 +134,9 @@ class ElasticsearchNotificationLogReaderImpl(Adapter):
                 index=_INDEX_NAME,
                 id=log_id,
             )
-        except Exception:
+        except NotFoundError:
+            # 「見つからない」だけを None に変換する。
+            # 接続エラー等は握り潰さず呼び出し元へ伝播させる。
             self._logger.debug(
                 "通知履歴が見つからない: id=%s",
                 log_id,
@@ -140,10 +146,14 @@ class ElasticsearchNotificationLogReaderImpl(Adapter):
 
     @staticmethod
     def _hit_to_entity(hit: Any) -> NotificationLog:
-        """ES ヒットを NotificationLog に変換する."""
+        """ES ヒットを NotificationLog に変換する.
+
+        本アダプタが当インデックスを所有し、書き込み時に `_id` を
+        str(uuid7) で採番する前提のため、読み取り時も UUID として解釈する。
+        """
         source: dict[str, Any] = hit["_source"]
         return NotificationLog(
-            id=hit["_id"],
+            id=uuid.UUID(hit["_id"]),
             event_type=source["event_type"],
             message=source["message"],
             status=source["status"],

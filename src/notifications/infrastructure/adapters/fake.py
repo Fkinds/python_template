@@ -78,6 +78,6 @@ class FakeNotificationLogReader:
     def find_by_id(self, log_id: str) -> NotificationLog | None:
         """指定IDの固定データを返す."""
         for log in self._logs:
-            if log.id == log_id:
+            if str(log.id) == log_id:
                 return log
         return None
