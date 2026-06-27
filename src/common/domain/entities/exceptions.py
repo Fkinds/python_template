@@ -1,7 +1,9 @@
 """共通ドメイン例外クラス."""
 
+from common.domain.exceptions import AppError
 
-class EntityError(Exception):
+
+class EntityError(AppError):
     """エンティティに関連するエラーの基底クラス."""
 
     pass

@@ -1,7 +1,9 @@
 """アダプタ層の例外クラス."""
 
+from common.domain.exceptions import AppError
 
-class AdapterError(Exception):
+
+class AdapterError(AppError):
     """アダプタに関連するエラーの基底クラス."""
 
     pass
