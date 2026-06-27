@@ -17,13 +17,24 @@ When invoked:
 - Line length <= 79 characters
 - Double quotes, single-line imports
 - Value objects use `attrs.frozen` + `kw_only=True` (in `entities/`)
+- Immutable objects: read via `@property` only, no setters;
+  invariants enforced at construction (validator /
+  `__attrs_post_init__`), invalid states unconstructible
 - Business logic is NOT in Django models (models are persistence only)
 - Models have `related_name`, `Meta.ordering`, and `__str__`
 - Serializers are separated by action (list vs detail) with `read_only_fields`
+- Collections default to `set` / `frozenset` unless order /
+  duplicates / index matter; membership tests never on `list`
+- Default to `enum.Enum`; `StrEnum` only for mandatory string
+  interop (API / DB / JSON value)
 - Tests follow Arrange-Act-Assert with `test_*_happy_path` / `test_*_error` prefixes
+- Heavy `mock.patch` / `MagicMock` usage flagged as a design
+  smell (missing DI / seams), not just a test issue
 - Test descriptions and business comments are in Japanese
 - No security issues (SQL injection, XSS, exposed secrets)
 - No unbounded queries or in-memory list expansion of large datasets
+- Unknown / large data iterated lazily (`iterator()` /
+  generator), not materialized into a `list`
 - Custom Fixit lint rules are respected
 
 ## Output format

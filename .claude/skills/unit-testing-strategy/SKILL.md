@@ -172,6 +172,25 @@ internal logic steps are fragile.
 
 Prefer output-value > state-based > communication-based.
 
+## Mock Count is a Design Smell
+
+A growing number of `mock.patch` / `MagicMock` in a test is a
+symptom, not a cause. It signals that the system under test
+**reaches out to its dependencies directly** instead of
+receiving them — i.e. missing DI or poor seams.
+
+| Symptom | Root cause | Fix the design, not the test |
+|---|---|---|
+| Many `mock.patch` in one test | Dependency hard-wired inside SUT | Inject a `Protocol` (port) via constructor |
+| `patch` on internal module path | Test coupled to import location | Pass collaborator as an argument |
+| `MagicMock` for a collaborator | No seam to substitute a double | Hand-written Stub / Fake + DI override |
+| `patch` to set return values | Stubbing through the back door | Provide a Stub via DI |
+
+Reserve `mock.patch` for I/O boundaries that genuinely cannot
+be swapped through DI (e.g. a third-party SDK call deep in
+infrastructure). If a domain or use-case test needs patching,
+treat it as a design defect to refactor, not a test to write.
+
 ## Rules
 
 - Test one behavior per test method, not one function
@@ -183,3 +202,5 @@ Prefer output-value > state-based > communication-based.
 - Prefer black-box testing over white-box testing
 - Do not verify interactions with stubs
 - Prefer output-value testing over state-based testing
+- Treat heavy `mock.patch` / `MagicMock` usage as a design
+  smell; fix DI / seams instead of adding mocks

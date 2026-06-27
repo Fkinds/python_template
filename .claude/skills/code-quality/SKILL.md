@@ -43,6 +43,97 @@ Prefer immutable types when data does not need to change:
 | `set` | `frozenset` |
 | `list[T]` | `tuple[T, ...]` / `collections.abc.Sequence[T]` |
 
+### Immutable Objects & Invariants
+
+Encapsulate state and make invalid states **unconstructible**.
+
+- Expose reads through `@property` only; never define setters.
+- `attrs.frozen(kw_only=True)` blocks reassignment, so no
+  setter exists by construction.
+- Enforce invariants at build time (`@<field>.validator` /
+  `__attrs_post_init__`), not in a separate `validate()` call.
+
+```python
+# Bad: mutable, validated after the fact (invalid state exists)
+@attrs.define
+class Money:
+    amount: int
+
+    def validate(self) -> None:
+        if self.amount < 0:
+            raise ValueError("amount must be >= 0")
+
+# Good: frozen + invariant at construction (unconstructible if invalid)
+@attrs.frozen(kw_only=True)
+class Money:
+    amount: int
+
+    @amount.validator
+    def _check(self, _attr: attrs.Attribute, value: int) -> None:
+        if value < 0:
+            msg = "amount must be >= 0"
+            raise ValueError(msg)
+
+    @property
+    def is_zero(self) -> bool:
+        return self.amount == 0
+```
+
+attrs validators raise `ValueError` / `TypeError`; the
+interface layer converts them to `serializers.ValidationError`.
+
+### Collections: set / frozenset First
+
+Default to `set` / `frozenset` unless order, duplicates, or
+index access carry meaning. Reach for `list` / `tuple` only
+when one of those properties is required.
+
+| Need | Type |
+|---|---|
+| Unique, unordered, immutable | `frozenset` |
+| Unique, unordered, mutable | `set` |
+| Order or index matters | `list` / `tuple` |
+| Membership test (`x in ...`) | `set` / `frozenset` (O(1)) |
+
+### Unbounded Iteration
+
+For data whose size is unknown / large / externally sourced,
+iterate lazily instead of materializing a `list`.
+
+| Source | Bad | Good |
+|---|---|---|
+| QuerySet | `list(qs)` | `qs.iterator()` |
+| Own generation | `[x for x in huge]` | `(x for x in huge)` |
+| Aggregation | manual `for` + accumulator | `sum()` / `any()` / `all()` |
+
+Materialize fully only when the size is bounded and known.
+
+## Enum over StrEnum
+
+Default to `enum.Enum`. A `StrEnum` member **is** a `str`, so
+it silently leaks into string contexts and blurs the type
+boundary.
+
+| Use | Choice |
+|---|---|
+| Domain state / category | `enum.Enum` (convert via `.value`) |
+| Integer-backed flags / codes | `enum.IntEnum` |
+| Mandatory string interop (API / DB / JSON value) | `enum.StrEnum` |
+
+```python
+# Bad: StrEnum used as a plain domain category — leaks as str
+class Status(enum.StrEnum):
+    ACTIVE = "active"
+
+# "active" == Status.ACTIVE is True → type distinction lost
+
+# Good: Enum keeps the boundary; serialize explicitly
+class Status(enum.Enum):
+    ACTIVE = "active"
+
+payload = {"status": Status.ACTIVE.value}  # explicit conversion
+```
+
 ## attrs over dataclasses
 
 Prefer `attrs` over `dataclasses`. `attrs` enables `__slots__`
