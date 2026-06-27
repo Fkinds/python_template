@@ -15,26 +15,14 @@ class ParamLineBreak(LintRule):
     When there are two or more effective parameters, line breaks are required.
     """
 
-    MESSAGE_COLLAPSE = (
-        "Single effective parameter should be on one line."
-    )
-    MESSAGE_EXPAND = (
-        "Multiple effective parameters should use line breaks."
-    )
+    MESSAGE_COLLAPSE = "Single effective parameter should be on one line."
+    MESSAGE_EXPAND = "Multiple effective parameters should use line breaks."
     MESSAGE = MESSAGE_COLLAPSE
 
     VALID = [
         Valid("def f(x: int) -> None: ...\n"),
-        Valid(
-            "class Foo:\n"
-            "    def method(self, x: int) -> None: ...\n"
-        ),
-        Valid(
-            "def f(\n"
-            "    x: int,\n"
-            "    y: int,\n"
-            ") -> None: ...\n"
-        ),
+        Valid("class Foo:\n    def method(self, x: int) -> None: ...\n"),
+        Valid("def f(\n    x: int,\n    y: int,\n) -> None: ...\n"),
         Valid(
             "class Foo:\n"
             "    def method(\n"
@@ -44,17 +32,12 @@ class ParamLineBreak(LintRule):
             "    ) -> None: ...\n"
         ),
         Valid("def f() -> None: ...\n"),
-        Valid(
-            "class Foo:\n"
-            "    def method(self) -> None: ...\n"
-        ),
+        Valid("class Foo:\n    def method(self) -> None: ...\n"),
     ]
 
     INVALID = [
         Invalid(
-            "def f(\n"
-            "    x: int,\n"
-            ") -> None: ...\n",
+            "def f(\n    x: int,\n) -> None: ...\n",
             expected_message=MESSAGE_COLLAPSE,
         ),
         Invalid(
@@ -70,8 +53,7 @@ class ParamLineBreak(LintRule):
             expected_message=MESSAGE_EXPAND,
         ),
         Invalid(
-            "class Foo:\n"
-            "    def method(self, x: int, y: int) -> None: ...\n",
+            "class Foo:\n    def method(self, x: int, y: int) -> None: ...\n",
             expected_message=MESSAGE_EXPAND,
         ),
     ]

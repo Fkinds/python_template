@@ -46,9 +46,7 @@ def _make_replacement(enum_name: str) -> cst.Attribute:
     )
 
 
-def _check_integer(
-    node: cst.Integer,
-) -> tuple[int, str] | None:
+def _check_integer(node: cst.Integer) -> tuple[int, str] | None:
     try:
         value = int(node.value)
     except ValueError:
