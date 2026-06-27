@@ -17,6 +17,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "drf_spectacular",
     "config",
     "authors",
     "books",
@@ -144,6 +145,15 @@ REST_FRAMEWORK = {
     "EXCEPTION_HANDLER": (
         "common.infrastructure.exception_handler.custom_exception_handler"
     ),
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+}
+
+# ---- OpenAPI (drf-spectacular) ----
+SPECTACULAR_SETTINGS = {
+    "TITLE": "Python Template API",
+    "DESCRIPTION": "Django REST Framework API template (DDD)",
+    "VERSION": "1.0.0",
+    "SERVE_INCLUDE_SCHEMA": False,
 }
 
 # ---- Logging ----
