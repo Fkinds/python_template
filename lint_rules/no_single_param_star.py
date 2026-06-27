@@ -20,29 +20,17 @@ class NoSingleParamStar(LintRule):
 
     VALID = [
         Valid("def foo(self, a: int) -> None: ..."),
-        Valid(
-            "def foo(self, *, a: int, b: str)"
-            " -> None: ..."
-        ),
-        Valid(
-            "def foo(a: int, *, b: str) -> None: ..."
-        ),
+        Valid("def foo(self, *, a: int, b: str) -> None: ..."),
+        Valid("def foo(a: int, *, b: str) -> None: ..."),
         Valid("def foo(*args: int) -> None: ..."),
     ]
 
     INVALID = [
-        Invalid(
-            "def foo(self, *, msg: str) -> None: ..."
-        ),
-        Invalid(
-            "def foo(*, msg: str) -> None: ..."
-        ),
+        Invalid("def foo(self, *, msg: str) -> None: ..."),
+        Invalid("def foo(*, msg: str) -> None: ..."),
     ]
 
-    def visit_FunctionDef(
-        self,
-        node: cst.FunctionDef,
-    ) -> None:
+    def visit_FunctionDef(self, node: cst.FunctionDef) -> None:
         params = node.params
 
         # bare * のみ対象 (*args は除外)
@@ -55,9 +43,7 @@ class NoSingleParamStar(LintRule):
 
         # self/cls 以外の positional パラメータがある → * に意味がある
         regular = params.params
-        if len(regular) == 0:
-            self.report(node)
-        elif (
+        if len(regular) == 0 or (
             len(regular) == 1
             and isinstance(regular[0].name, cst.Name)
             and regular[0].name.value in ("self", "cls")
