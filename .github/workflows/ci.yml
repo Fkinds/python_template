@@ -21,8 +21,8 @@ jobs:
           path: .ruff_cache
           key: ruff-${{ hashFiles('pyproject.toml') }}
           restore-keys: ruff-
-      - run: uv run ruff check src tests
-      - run: uv run ruff format --check src tests
+      - run: uv run ruff check src tests lint_rules
+      - run: uv run ruff format --check src tests lint_rules
 
   fixit:
     runs-on: ubuntu-latest
@@ -36,7 +36,7 @@ jobs:
           path: .libcst.caches
           key: fixit-${{ hashFiles('pyproject.toml') }}
           restore-keys: fixit-
-      - run: uv run fixit lint src tests
+      - run: uv run fixit lint src tests lint_rules
 
   lint-imports:
     runs-on: ubuntu-latest
@@ -59,7 +59,7 @@ jobs:
           path: .mypy_cache
           key: mypy-${{ hashFiles('pyproject.toml') }}
           restore-keys: mypy-
-      - run: uv run mypy src
+      - run: uv run mypy src lint_rules
 
   ty:
     runs-on: ubuntu-latest
@@ -68,7 +68,7 @@ jobs:
       - uses: ./.github/actions/setup-python-env
         with:
           python-version: ${{ env.PYTHON_VERSION }}
-      - run: uv run ty check src
+      - run: uv run ty check src lint_rules
 
   unit_test:
     runs-on: ubuntu-latest

@@ -6,7 +6,7 @@ Package manager: `uv`. First-party packages: `config`, `common`, `authors`, `boo
 ## Rules
 
 - Always prefix commands with `uv run`. Never use bare `python`, `pytest`, or `mypy`.
-- Commit with hooks enabled (never use `--no-verify`). If pre-commit fails or is not installed, run manually: `uv run ruff check src tests && uv run ruff format --check src tests && uv run mypy src && uv run fixit lint src tests && uv run lint-imports && uv run pytest`
+- Commit with hooks enabled (never use `--no-verify`). If pre-commit fails or is not installed, run manually: `uv run ruff check src tests lint_rules && uv run ruff format --check src tests lint_rules && uv run mypy src lint_rules && uv run fixit lint src tests lint_rules && uv run lint-imports && uv run pytest`
 - Business logic belongs in value objects (`entities/`), not in Django models. Models are for persistence only.
 - Write test descriptions and business-context comments in Japanese.
 - Strictly follow Conventional Commits: `<type>: <subject>` (type: feat|fix|refactor|test|chore|ci|docs|revert, subject: English, lowercase, no period)

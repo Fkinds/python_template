@@ -9,7 +9,7 @@ repos:
     hooks:
       - id: mypy
         name: Run mypy
-        entry: bash -c 'export PATH="$HOME/.local/bin:$PATH" && uv run mypy src'
+        entry: bash -c 'export PATH="$HOME/.local/bin:$PATH" && uv run mypy src lint_rules'
         language: system
         types: [python]
         pass_filenames: false
@@ -18,7 +18,7 @@ repos:
     hooks:
       - id: fixit
         name: Run fixit
-        entry: bash -c 'export PATH="$HOME/.local/bin:$PATH" && uv run fixit lint src tests'
+        entry: bash -c 'export PATH="$HOME/.local/bin:$PATH" && uv run fixit lint src tests lint_rules'
         language: system
         types: [python]
         pass_filenames: false
