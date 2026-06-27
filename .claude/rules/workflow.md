@@ -38,10 +38,10 @@ Never mark a task complete without proving it works:
 
 - Run the relevant test suite with `uv run pytest`
 - Run the full lint chain:
-  `uv run ruff check src tests &&
-   uv run ruff format --check src tests &&
-   uv run mypy src &&
-   uv run fixit lint src tests &&
+  `uv run ruff check src tests lint_rules &&
+   uv run ruff format --check src tests lint_rules &&
+   uv run mypy src lint_rules &&
+   uv run fixit lint src tests lint_rules &&
    uv run lint-imports`
 - Diff behavior between main and your changes when relevant
 - Ask yourself: "Would a staff engineer approve this?"
