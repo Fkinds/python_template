@@ -1,6 +1,7 @@
 """通知履歴 API エンドポイントの機能テスト."""
 
 import http
+import uuid
 from collections.abc import Generator
 from datetime import UTC
 from datetime import datetime
@@ -25,10 +26,15 @@ from notifications.infrastructure.containers.notificaton import (
 from notifications.infrastructure.containers.notificaton import container
 
 
-def _make_log(log_id: str = "abc123") -> NotificationLog:
+def _make_id(index: int = 0) -> uuid.UUID:
+    """テスト用の決定的な UUID を生成する (index は 16 進連番)."""
+    return uuid.UUID(f"0192f0a0-0000-7000-8000-{index:012x}")
+
+
+def _make_log(log_id: uuid.UUID | None = None) -> NotificationLog:
     """テスト用の NotificationLog を生成するヘルパー."""
     return NotificationLog(
-        id=log_id,
+        id=log_id if log_id is not None else _make_id(),
         event_type=EventType.BOOK_CREATED,
         message="本が登録されました: テスト",
         status=NotificationStatus.SUCCESS,
@@ -59,7 +65,7 @@ def fake_log_reader(db: object) -> Generator[FakeNotificationLogReader]:
 @pytest.fixture
 def seeded_log_reader(db: object) -> Generator[FakeNotificationLogReader]:
     """データ付きの FakeNotificationLogReader を DI に差し込む."""
-    logs = [_make_log(log_id=f"id-{i}") for i in range(5)]
+    logs = [_make_log(log_id=_make_id(i)) for i in range(5)]
     reader = FakeNotificationLogReader(logs=logs)
     container.override(
         NotificationModule(
@@ -143,12 +149,15 @@ class TestNotificationLogDetailAPI:
         seeded_log_reader: FakeNotificationLogReader,
     ) -> None:
         """存在するIDの場合にデータが返ること."""
+        # Arrange
+        target_id = _make_id(0)
+
         # Act
-        response = api_client.get("/api/notifications/id-0/")
+        response = api_client.get(f"/api/notifications/{target_id}/")
 
         # Assert
         assert response.status_code == http.HTTPStatus.OK
-        assert response.data["id"] == "id-0"
+        assert response.data["id"] == str(target_id)
         assert response.data["event_type"] == "book_created"
 
     def test_error_detail_returns_404_when_not_found(
@@ -171,7 +180,7 @@ class TestNotificationLogDetailAPI:
         """POST メソッドが拒否されること."""
         # Act
         response = api_client.post(
-            "/api/notifications/id-0/",
+            f"/api/notifications/{_make_id(0)}/",
             data={},
         )
 

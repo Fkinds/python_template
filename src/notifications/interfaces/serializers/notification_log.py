@@ -8,7 +8,7 @@ from rest_framework import serializers
 class NotificationLogSerializer(serializers.Serializer[Any]):
     """通知履歴シリアライザ (read-only)."""
 
-    id = serializers.CharField(read_only=True)
+    id = serializers.UUIDField(read_only=True)
     event_type = serializers.CharField(
         read_only=True,
     )

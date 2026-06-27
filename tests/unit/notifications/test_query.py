@@ -1,3 +1,4 @@
+import uuid
 from datetime import UTC
 from datetime import datetime
 
@@ -12,10 +13,15 @@ from notifications.usecases.query import GetNotificationLogDetailUseCaseImpl
 from notifications.usecases.query import GetNotificationLogsUseCaseImpl
 
 
-def _make_log(log_id: str = "abc") -> NotificationLog:
+def _make_id(index: int = 0) -> uuid.UUID:
+    """テスト用の決定的な UUID を生成する (index は 16 進連番)."""
+    return uuid.UUID(f"0192f0a0-0000-7000-8000-{index:012x}")
+
+
+def _make_log(log_id: uuid.UUID | None = None) -> NotificationLog:
     """テスト用の NotificationLog を生成するヘルパー."""
     return NotificationLog(
-        id=log_id,
+        id=log_id if log_id is not None else _make_id(),
         event_type=EventType.BOOK_CREATED,
         message="本が登録されました: テスト",
         status=NotificationStatus.SUCCESS,
@@ -33,7 +39,7 @@ class TestGetNotificationLogsUseCaseImpl:
     def test_happy_returns_list_and_count(self) -> None:
         """履歴一覧とカウントが返ること."""
         # Arrange
-        logs = [_make_log(log_id=f"id-{i}") for i in range(3)]
+        logs = [_make_log(log_id=_make_id(i)) for i in range(3)]
         reader = FakeNotificationLogReader(logs=logs)
         use_case = GetNotificationLogsUseCaseImpl(
             reader=reader,
@@ -64,7 +70,7 @@ class TestGetNotificationLogsUseCaseImpl:
     def test_happy_pagination(self) -> None:
         """ページネーションが正しく動作すること."""
         # Arrange
-        logs = [_make_log(log_id=f"id-{i}") for i in range(5)]
+        logs = [_make_log(log_id=_make_id(i)) for i in range(5)]
         reader = FakeNotificationLogReader(logs=logs)
         use_case = GetNotificationLogsUseCaseImpl(
             reader=reader,
@@ -88,18 +94,19 @@ class TestGetNotificationLogDetailUseCaseImpl:
     def test_happy_returns_entity(self) -> None:
         """指定IDの履歴が返ること."""
         # Arrange
-        log = _make_log(log_id="target-id")
+        target_id = _make_id(99)
+        log = _make_log(log_id=target_id)
         reader = FakeNotificationLogReader(logs=[log])
         use_case = GetNotificationLogDetailUseCaseImpl(
             reader=reader,
         )
 
         # Act
-        result = use_case.execute(log_id="target-id")
+        result = use_case.execute(log_id=str(target_id))
 
         # Assert
         assert result is not None
-        assert result.id == "target-id"
+        assert result.id == target_id
 
     def test_happy_returns_none_when_not_found(
         self,
