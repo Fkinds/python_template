@@ -214,7 +214,7 @@ class TestAuthorRetrieveUpdateDelete:
         # Assert
         assert response.status_code == status.HTTP_200_OK
         assert response.data["name"] == "夏目漱石"
-        assert response.data["id"] == author.pk
+        assert response.data["id"] == str(author.pk)
 
     def test_happy_put_updates_author(
         self, api_client: APIClient, author: Author
@@ -273,7 +273,9 @@ class TestAuthorRetrieveUpdateDelete:
     ) -> None:
         """異常系: 存在しない著者に対して 404 を返すこと."""
         # Arrange
-        url = f"{self.endpoint}99999/"
+        # 形式は妥当だが存在しない UUID。
+        missing_id = "00000000-0000-7000-8000-000000000000"
+        url = f"{self.endpoint}{missing_id}/"
         payload = {"name": "存在しない"}
 
         # Act
