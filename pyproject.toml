@@ -18,7 +18,6 @@ dependencies = [
     "injector>=0.22.0",
     "fixit>=2.1.0",
     "import-linter>=2.5.2",
-    "mypy>=1.18.2",
     "pillow>=11.0",
     "pre-commit>=4.3.0",
     "psycopg[binary]>=3.2",
