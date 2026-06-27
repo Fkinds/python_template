@@ -33,6 +33,43 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django import http, shortcuts
 ```
 
+## Language Idioms & Gotchas
+
+| Topic | Bad | Good | Why |
+|---|---|---|---|
+| Mutable default arg | `def f(x=[]):` | `def f(x=None): x = [] if x is None else x` | A default is evaluated once and **shared across all calls** |
+| Sentinel comparison | `if x == None:` | `if x is None:` | `None` is a singleton; identity, not equality |
+| Truthiness | `if flag == True:` | `if flag:` / `if not flag:` | PEP 8; also avoids `1 == True` surprises |
+| Empty check | `if len(items) == 0:` | `if not items:` | Works for any sequence/collection |
+
+```python
+# Bad: the same list persists between calls
+def append(value: int, acc: list[int] = []) -> list[int]:
+    acc.append(value)
+    return acc
+
+# Good: build a fresh default inside the body
+def append(
+    value: int, acc: list[int] | None = None
+) -> list[int]:
+    acc = [] if acc is None else acc
+    acc.append(value)
+    return acc
+```
+
+### f-string formatting vs logging
+
+Use f-string format specifiers for display; pass logging args
+**lazily** (let the logger interpolate) so unused log levels
+cost nothing.
+
+| Need | Form |
+|---|---|
+| Thousands separator | `f"{n:,}"` → `1,234,567` |
+| Fixed decimals | `f"{ratio:.2f}"` |
+| Percentage | `f"{rate:.1%}"` |
+| Logging | `logger.info("created %s", obj_id)` — not `f"created {obj_id}"` |
+
 ## Immutability
 
 Prefer immutable types when data does not need to change:

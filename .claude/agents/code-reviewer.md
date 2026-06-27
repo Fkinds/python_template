@@ -28,6 +28,16 @@ When invoked:
 - Default to `enum.Enum`; `StrEnum` only for mandatory string
   interop (API / DB / JSON value)
 - Tests follow Arrange-Act-Assert with `test_*_happy_path` / `test_*_error` prefixes
+- `domain/` and `usecases/` tests are Small (no DB, file I/O,
+  network, system clock, or `sleep`); a test needing a DB for
+  domain logic signals logic leaked into the repository
+- `parametrize` does not mix happy + error cases, explode into
+  meaningless combinations, or branch Act/Assert per param;
+  `ids` name the scenario
+- Tests assert observable outcomes, not call counts / private
+  methods / re-derived formulas
+- No mutable default arguments; `None` compared with `is`;
+  truthiness tested directly (no `== True` / `len(...) == 0`)
 - Heavy `mock.patch` / `MagicMock` usage flagged as a design
   smell (missing DI / seams), not just a test issue
 - Test descriptions and business comments are in Japanese

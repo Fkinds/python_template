@@ -79,6 +79,82 @@ When reviewing a test suite, verify these criteria:
 - [ ] Test phase responsibilities are clearly separated
 - [ ] Test descriptions explain **why**, not just **what**
 
+## Test Sizes (Small / Medium / Large)
+
+Classify tests by **what they may touch and how fast they
+run**, not by the ambiguous "unit / integration / E2E" labels.
+Source: Google Test Sizes. The terse MUST version lives in the
+`test-strategy.md` rule; this is the working reference.
+
+| Size | May use | Forbidden | Time | Parallel |
+|---|---|---|---|---|
+| **Small** | in-process memory / computation | network, file I/O, DB, system clock, `sleep`, threads | < 100ms | fully |
+| **Medium** | `localhost` (DB container, test server), temp files, subprocess | external internet | < 1s | same machine |
+| **Large** | anything (real external API, full stack, browser) | — | seconds–min | usually not |
+
+The Small ban list is stricter than newcomers expect:
+
+| Code | Verdict |
+|---|---|
+| `requests.get(...)` | ❌ network |
+| `open("data.json")` | ❌ file I/O |
+| DB connection | ❌ → Medium |
+| `datetime.now()` directly | ❌ inject the clock via DI |
+| `time.sleep(0.1)` | ❌ timing-dependent |
+| waiting on another thread | ❌ |
+
+- Django's `TestCase` against a real DB is **Medium**, even
+  though Django calls it a "unit test." Judge by behavior.
+- Medium allows `localhost` only — a DB test container or a
+  local test HTTP server is fine; reaching the public internet
+  is not (it makes the suite flaky when that service is down).
+- **Large is not a per-commit test.** Run it pre-merge,
+  nightly, or pre-release. It is slow, flaky, and hard to
+  parallelize, so keep it sparse.
+
+### Decision flow
+
+```
+Hits external internet?            → Large
+Uses localhost DB / file I/O?      → Medium
+Depends on clock / random / threads?
+  → inject the dependency → Small (else Medium)
+Otherwise                          → Small
+```
+
+When a test "can only be Medium/Large," first ask whether the
+logic can be **extracted into a pure function / injected
+dependency** so the Medium part shrinks to the thin edge layer.
+
+### Test models
+
+The mix of sizes follows a model chosen by project nature.
+Whatever the model, **keep Large few** — it erodes CI trust.
+
+| Project nature | Model | Emphasis |
+|---|---|---|
+| Logic-rich domain (finance, rules) | Pyramid | Small-heavy |
+| Web frontend / SPA | Trophy | static (types/lint) + integration |
+| Microservice / thin API wrapper | Honeycomb | Medium-heavy (in-process integration) |
+| Unsure / ordinary web app | Start Pyramid | adjust where it hurts |
+
+### Layer → size (this project)
+
+| Layer | Size | Note |
+|---|---|---|
+| `domain/` logic, value objects | Small | no external deps |
+| `usecases/` | Small | mock deps via DI |
+| `interfaces/repositories/` | Medium | real DB; SQL only proves out against a real DB |
+| API handlers / views | Medium | framework test client + DB |
+| external API clients (thin wrapper) | Small (stub HTTP) + contract test | wrapper is Small; real API behavior via a separate contract test |
+| migrations | Medium | up/down against the DB |
+
+| Symptom | Cause | Fix |
+|---|---|---|
+| "domain logic needs a DB" | logic leaked into the repository | extract a pure function → Small |
+| "API handler test is slow" | rebuilding the DB per test | wrap each test in a transaction + rollback fixture |
+| "external client test is flaky" | hitting the real API | swap a stub; verify the real API via a contract test |
+
 ## Test Phase Responsibilities
 
 Unit tests do not guarantee external quality alone.
