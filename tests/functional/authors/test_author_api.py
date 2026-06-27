@@ -16,7 +16,7 @@ from notifications.infrastructure.containers.notificaton import container
 
 @pytest.mark.django_db
 class TestAuthorListCreate:
-    endpoint = "/api/authors/"
+    endpoint = "/api/v1/authors/"
 
     # --- 正常系 ---
 
@@ -201,7 +201,7 @@ class TestAuthorListCreate:
 
 @pytest.mark.django_db
 class TestAuthorRetrieveUpdateDelete:
-    endpoint = "/api/authors/"
+    endpoint = "/api/v1/authors/"
 
     # --- 正常系 ---
 
@@ -304,3 +304,22 @@ class TestAuthorRetrieveUpdateDelete:
         # Assert
         assert response.status_code == status.HTTP_400_BAD_REQUEST
         assert "name" in response.data
+
+
+@pytest.mark.django_db
+class TestApiVersioning:
+    """API バージョニングの回帰テスト."""
+
+    @pytest.mark.parametrize(
+        "old_path",
+        ["/api/authors/", "/api/books/", "/api/notifications/"],
+    )
+    def test_error_old_api_prefix_returns_404(
+        self, api_client: APIClient, old_path: str
+    ) -> None:
+        """バージョンなしの旧 /api/ プレフィックスは 404 になること."""
+        # Act
+        response = api_client.get(old_path)
+
+        # Assert
+        assert response.status_code == status.HTTP_404_NOT_FOUND

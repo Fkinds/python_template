@@ -89,7 +89,7 @@ class TestNotificationLogListAPI:
     ) -> None:
         """履歴がない場合に空の結果が返ること."""
         # Act
-        response = api_client.get("/api/notifications/")
+        response = api_client.get("/api/v1/notifications/")
 
         # Assert
         assert response.status_code == http.HTTPStatus.OK
@@ -103,7 +103,7 @@ class TestNotificationLogListAPI:
     ) -> None:
         """履歴がある場合にデータが返ること."""
         # Act
-        response = api_client.get("/api/notifications/")
+        response = api_client.get("/api/v1/notifications/")
 
         # Assert
         assert response.status_code == http.HTTPStatus.OK
@@ -117,7 +117,7 @@ class TestNotificationLogListAPI:
     ) -> None:
         """ページネーションパラメータが反映されること."""
         # Act
-        response = api_client.get("/api/notifications/?page=1&page_size=2")
+        response = api_client.get("/api/v1/notifications/?page=1&page_size=2")
 
         # Assert
         assert response.status_code == http.HTTPStatus.OK
@@ -132,7 +132,7 @@ class TestNotificationLogListAPI:
         """POST メソッドが拒否されること."""
         # Act
         response = api_client.post(
-            "/api/notifications/",
+            "/api/v1/notifications/",
             data={},
         )
 
@@ -153,7 +153,7 @@ class TestNotificationLogDetailAPI:
         target_id = _make_id(0)
 
         # Act
-        response = api_client.get(f"/api/notifications/{target_id}/")
+        response = api_client.get(f"/api/v1/notifications/{target_id}/")
 
         # Assert
         assert response.status_code == http.HTTPStatus.OK
@@ -167,7 +167,7 @@ class TestNotificationLogDetailAPI:
     ) -> None:
         """存在しないIDの場合に404が返ること."""
         # Act
-        response = api_client.get("/api/notifications/nonexistent/")
+        response = api_client.get("/api/v1/notifications/nonexistent/")
 
         # Assert
         assert response.status_code == http.HTTPStatus.NOT_FOUND
@@ -180,7 +180,7 @@ class TestNotificationLogDetailAPI:
         """POST メソッドが拒否されること."""
         # Act
         response = api_client.post(
-            f"/api/notifications/{_make_id(0)}/",
+            f"/api/v1/notifications/{_make_id(0)}/",
             data={},
         )
 

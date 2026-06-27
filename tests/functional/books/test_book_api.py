@@ -18,7 +18,7 @@ from notifications.infrastructure.containers.notificaton import container
 
 @pytest.mark.django_db
 class TestBookListCreate:
-    endpoint = "/api/books/"
+    endpoint = "/api/v1/books/"
 
     # --- 正常系 ---
 
@@ -377,7 +377,7 @@ class TestBookListCreate:
 
 @pytest.mark.django_db
 class TestBookRetrieveUpdateDelete:
-    endpoint = "/api/books/"
+    endpoint = "/api/v1/books/"
 
     # --- 正常系 ---
 
