@@ -1,6 +1,6 @@
 from rest_framework import serializers
 
-from authors.serializers import AuthorSerializer
+from authors.interfaces.serializers.author import AuthorSerializer
 from books.entities import TITLE_MAX_LENGTH
 from books.entities import TITLE_MIN_LENGTH
 from books.entities import Book

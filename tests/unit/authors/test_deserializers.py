@@ -2,11 +2,11 @@ import pytest
 from hypothesis import given
 from hypothesis import strategies as st
 
-from authors.serializers import AuthorSerializer
+from authors.interfaces.deserializers.author import AuthorDeserializer
 
 
-# AuthorSerializer は unique/FK が無いため is_valid() が DB 不要
-class TestAuthorSerializer:
+# AuthorDeserializer は unique/FK が無いため is_valid() が DB 不要
+class TestAuthorDeserializer:
     # --- 正常系 ---
 
     def test_happy_accepts_name_only(self) -> None:
@@ -14,10 +14,10 @@ class TestAuthorSerializer:
         data = {"name": "太宰治"}
 
         # Act
-        s = AuthorSerializer(data=data)
+        deserializer = AuthorDeserializer(data=data)
 
         # Assert
-        assert s.is_valid()
+        assert deserializer.is_valid()
 
     def test_happy_accepts_name_and_bio(self) -> None:
         # Arrange
@@ -27,20 +27,20 @@ class TestAuthorSerializer:
         }
 
         # Act
-        s = AuthorSerializer(data=data)
+        deserializer = AuthorDeserializer(data=data)
 
         # Assert
-        assert s.is_valid()
+        assert deserializer.is_valid()
 
     def test_happy_accepts_empty_bio(self) -> None:
         # Arrange
         data = {"name": "太宰治", "bio": ""}
 
         # Act
-        s = AuthorSerializer(data=data)
+        deserializer = AuthorDeserializer(data=data)
 
         # Assert
-        assert s.is_valid()
+        assert deserializer.is_valid()
 
     @given(
         name=st.text(
@@ -57,21 +57,21 @@ class TestAuthorSerializer:
         data = {"name": name}
 
         # Act
-        s = AuthorSerializer(data=data)
+        deserializer = AuthorDeserializer(data=data)
 
         # Assert
-        assert s.is_valid(), s.errors
+        assert deserializer.is_valid(), deserializer.errors
 
     def test_happy_ignores_id_in_input(self) -> None:
         # Arrange
-        data = {"id": 999, "name": "テスト"}
+        data = {"id": "x", "name": "テスト"}
 
         # Act
-        s = AuthorSerializer(data=data)
+        deserializer = AuthorDeserializer(data=data)
 
         # Assert
-        assert s.is_valid()
-        assert "id" not in s.validated_data
+        assert deserializer.is_valid()
+        assert "id" not in deserializer.validated_data
 
     # --- 異常系 ---
 
@@ -86,43 +86,43 @@ class TestAuthorSerializer:
         data = {"name": ws}
 
         # Act
-        s = AuthorSerializer(data=data)
+        deserializer = AuthorDeserializer(data=data)
 
         # Assert
-        assert not s.is_valid()
+        assert not deserializer.is_valid()
 
     def test_error_rejects_missing_name(self) -> None:
         # Arrange
         data = {"bio": "略歴"}
 
         # Act
-        s = AuthorSerializer(data=data)
+        deserializer = AuthorDeserializer(data=data)
 
         # Assert
-        assert not s.is_valid()
-        assert "name" in s.errors
+        assert not deserializer.is_valid()
+        assert "name" in deserializer.errors
 
     def test_error_rejects_empty_data(self) -> None:
         # Arrange
         data: dict[str, str] = {}
 
         # Act
-        s = AuthorSerializer(data=data)
+        deserializer = AuthorDeserializer(data=data)
 
         # Assert
-        assert not s.is_valid()
-        assert "name" in s.errors
+        assert not deserializer.is_valid()
+        assert "name" in deserializer.errors
 
     def test_error_rejects_name_over_max_length(self) -> None:
         # Arrange
         data = {"name": "a" * 256}
 
         # Act
-        s = AuthorSerializer(data=data)
+        deserializer = AuthorDeserializer(data=data)
 
         # Assert
-        assert not s.is_valid()
-        assert "name" in s.errors
+        assert not deserializer.is_valid()
+        assert "name" in deserializer.errors
 
     @given(
         name=st.text(
@@ -139,18 +139,18 @@ class TestAuthorSerializer:
         data = {"name": name}
 
         # Act
-        s = AuthorSerializer(data=data)
+        deserializer = AuthorDeserializer(data=data)
 
         # Assert
-        assert not s.is_valid()
-        assert "name" in s.errors
+        assert not deserializer.is_valid()
+        assert "name" in deserializer.errors
 
     def test_error_rejects_null_char_in_name(self) -> None:
         # Arrange
         data = {"name": "a\x00b"}
 
         # Act
-        s = AuthorSerializer(data=data)
+        deserializer = AuthorDeserializer(data=data)
 
         # Assert
-        assert not s.is_valid()
+        assert not deserializer.is_valid()
