@@ -6,6 +6,14 @@ from typing import Any
 from typing import ClassVar
 from uuid import UUID
 
+from drf_spectacular.types import OpenApiTypes
+from drf_spectacular.utils import OpenApiParameter
+from drf_spectacular.utils import OpenApiResponse
+from drf_spectacular.utils import extend_schema
+from drf_spectacular.utils import extend_schema_serializer
+from drf_spectacular.utils import extend_schema_view
+from rest_framework import serializers
+
 from authors.domain.entities.author import Author
 from authors.interfaces.deserializers.author import AuthorDeserializer
 from authors.interfaces.serializers.author import AuthorSerializer
@@ -20,6 +28,73 @@ from notifications.usecases.protocols import NotifyAuthorCreatedUseCase
 logger = logging.getLogger(__name__)
 
 
+# 一覧は {count, results} のエンベロープで返すため、OpenAPI 用に明示する。
+# many=False で list アクションの配列ラップ (heuristic) を抑止する。
+@extend_schema_serializer(many=False, component_name="AuthorListResponse")
+class _AuthorListResponse(serializers.Serializer[Any]):
+    count = serializers.IntegerField()
+    results = AuthorSerializer(many=True)
+
+
+# 一覧アクションのページングは query_params から直接読むため明示する。
+_PAGE_PARAMS = [
+    OpenApiParameter(
+        name="page",
+        type=OpenApiTypes.INT,
+        location=OpenApiParameter.QUERY,
+        description="ページ番号 (1 以上)",
+    ),
+    OpenApiParameter(
+        name="page_size",
+        type=OpenApiTypes.INT,
+        location=OpenApiParameter.QUERY,
+        description="1 ページあたりの件数 (1 以上)",
+    ),
+]
+
+# 単一資源を指すパスパラメータ (UUID) を明示する。
+_ID_PARAM = OpenApiParameter(
+    name="id",
+    type=OpenApiTypes.UUID,
+    location=OpenApiParameter.PATH,
+    description="著者ID (UUID)",
+)
+
+
+@extend_schema_view(
+    list=extend_schema(
+        summary="著者一覧",
+        parameters=_PAGE_PARAMS,
+        responses=_AuthorListResponse,
+    ),
+    create=extend_schema(
+        summary="著者作成",
+        request=AuthorDeserializer,
+        responses={201: AuthorSerializer},
+    ),
+    retrieve=extend_schema(
+        summary="著者取得",
+        parameters=[_ID_PARAM],
+        responses=AuthorSerializer,
+    ),
+    update=extend_schema(
+        summary="著者更新",
+        parameters=[_ID_PARAM],
+        request=AuthorDeserializer,
+        responses=AuthorSerializer,
+    ),
+    partial_update=extend_schema(
+        summary="著者部分更新",
+        parameters=[_ID_PARAM],
+        request=AuthorDeserializer,
+        responses=AuthorSerializer,
+    ),
+    destroy=extend_schema(
+        summary="著者削除",
+        parameters=[_ID_PARAM],
+        responses={204: OpenApiResponse(description="削除成功")},
+    ),
+)
 class AuthorViewSet(CrudViewSet):
     """著者 CRUD API."""
 
