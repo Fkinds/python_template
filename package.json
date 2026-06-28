@@ -33,7 +33,7 @@
     "compare-func": "^2.0.0",
     "conventional-changelog-angular": "^7.0.0",
     "conventional-changelog-conventionalcommits": "^7.0.2",
-    "conventional-commits-parser": "^5.0.0",
+    "conventional-commits-parser": "^7.0.0",
     "cosmiconfig": "^9.0.0",
     "cosmiconfig-typescript-loader": "^6.1.0",
     "dargs": "^8.1.0",
