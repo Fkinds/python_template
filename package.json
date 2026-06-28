@@ -28,7 +28,7 @@
     "callsites": "^3.1.0",
     "chalk": "^5.6.2",
     "cliui": "^8.0.1",
-    "color-convert": "^2.0.1",
+    "color-convert": "^3.0.0",
     "color-name": "^1.1.4",
     "compare-func": "^2.0.0",
     "conventional-changelog-angular": "^7.0.0",
