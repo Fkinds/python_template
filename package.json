@@ -52,7 +52,7 @@
     "import-meta-resolve": "^4.2.0",
     "ini": "^4.1.1",
     "is-arrayish": "^0.2.1",
-    "is-fullwidth-code-point": "^3.0.0",
+    "is-fullwidth-code-point": "^5.0.0",
     "is-obj": "^2.0.0",
     "is-text-path": "^2.0.0",
     "jiti": "^2.6.1",
