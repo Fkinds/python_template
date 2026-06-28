@@ -26,7 +26,7 @@ services:
       ELASTICSEARCH_URL: http://elasticsearch:9200
 
   db:
-    image: postgres:16
+    image: postgres:18
     container_name: postgres_db
     restart: always
     ports:
@@ -64,7 +64,7 @@ services:
       retries: 5
 
   elasticsearch:
-    image: elasticsearch:8.17.0
+    image: elasticsearch:9.4.2
     container_name: elasticsearch
     restart: always
     ports:
