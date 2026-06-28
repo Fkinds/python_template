@@ -1,0 +1,45 @@
+name: Auto Approve Renovate
+
+# Renovate の PR は CI（Continuous Integration）が成功したら github-actions[bot] が
+# 自動 approve する。実際のマージはブランチ保護の required status checks が引き続き
+# ゲートするため、approve は「レビュー要件を満たす」ためのもので、単体ではマージしない。
+
+on:
+  workflow_run:
+    workflows: ["Continuous Integration"]
+    types: [completed]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  approve:
+    runs-on: ubuntu-latest
+    if: >-
+      github.event.workflow_run.event == 'pull_request' &&
+      github.event.workflow_run.conclusion == 'success' &&
+      startsWith(github.event.workflow_run.head_branch, 'renovate/')
+    steps:
+      - name: Approve passing Renovate PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          HEAD_BRANCH: ${{ github.event.workflow_run.head_branch }}
+        run: |
+          PR=$(gh pr list --repo "$REPO" --head "$HEAD_BRANCH" --state open \
+            --json number --jq '.[0].number // empty')
+          if [ -z "$PR" ]; then
+            echo "No open PR for branch $HEAD_BRANCH; skipping."
+            exit 0
+          fi
+
+          already=$(gh api "repos/$REPO/pulls/$PR/reviews" \
+            --jq '[.[] | select(.user.login == "github-actions[bot]" and .state == "APPROVED")] | length')
+          if [ "$already" -gt 0 ]; then
+            echo "PR #$PR already approved by github-actions[bot]; skipping."
+            exit 0
+          fi
+
+          gh pr review "$PR" --repo "$REPO" --approve \
+            --body "CI passed — auto-approved Renovate PR. Merge remains gated by all required status checks."
