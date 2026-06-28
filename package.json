@@ -91,7 +91,7 @@
     "text-extensions": "^2.4.0",
     "through": "^2.3.8",
     "tinyexec": "^1.0.1",
-    "typescript": "^5.9.3",
+    "typescript": "^6.0.0",
     "undici-types": "^7.14.0",
     "unicorn-magic": "^0.1.0",
     "wrap-ansi": "^7.0.0",
