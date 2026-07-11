@@ -1,9 +1,12 @@
 name: Claude Code Review
 
 # PR のコードレビューを Claude Code に実行させる。
-# 有効化には、リポジトリの Settings > Secrets and variables > Actions に
-# `ANTHROPIC_API_KEY` を登録する必要がある（未登録なら secret が空になり、
-# 下の if 条件でジョブがスキップされる）。
+# 認証は Claude サブスク（Pro/Max）の OAuth トークンを使う。
+# 有効化手順:
+#   1. ローカルで `claude setup-token` を実行しトークンを取得（ブラウザ認証）
+#   2. リポジトリの Settings > Secrets and variables > Actions に
+#      `CLAUDE_CODE_OAUTH_TOKEN` として登録
+# 未登録なら secret が空になり、下の if 条件でジョブがスキップされる。
 
 on:
   pull_request:
@@ -31,19 +34,19 @@ jobs:
     env:
       # secret が未設定なら 'false' になり、下のステップがスキップされる
       # （このジョブは必須チェックにしないので、未設定でも CI を壊さない）
-      has_api_key: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+      has_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
     steps:
       - name: Checkout
-        if: env.has_api_key == 'true'
+        if: env.has_token == 'true'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
       - name: Claude Code Review
-        if: env.has_api_key == 'true'
+        if: env.has_token == 'true'
         uses: anthropics/claude-code-action@v1
         with:
-          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           track_progress: true
           prompt: |
             あなたはこの Django REST Framework テンプレート（Python 3.14 /
