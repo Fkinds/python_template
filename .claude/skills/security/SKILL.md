@@ -24,6 +24,12 @@ description: Security checklist for Django/DRF. Use when implementing authentica
 | Use permission classes on every view | No `permission_classes` | `permission_classes = (IsAuthenticated,)` |
 | Disable browsable API in production | `DEFAULT_RENDERER_CLASSES` includes browsable | JSON renderer only |
 
+> Template scope: this repo's ViewSets intentionally omit
+> `permission_classes` (public by design) and do not restrict
+> renderers. When building a real service, add per-view
+> permissions and a JSON-only renderer in `prod.py`. See
+> `rules/security.md` §4–5.
+
 ## Secret Management
 
 - Never hardcode secrets, tokens, or passwords in source code

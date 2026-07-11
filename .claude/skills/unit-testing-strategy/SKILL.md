@@ -11,6 +11,11 @@ description: >-
 Based on Vladimir Khorikov, "Unit Testing Principles,
 Practices, and Patterns" (2020).
 
+> The **Small / Medium / Large size definitions and the
+> layer→size table are canonical in `rules/test-strategy.md`**.
+> This guide adds the QA rationale and doubles taxonomy on top of
+> them — refer there for the classification, don't re-derive it.
+
 ## Purpose of Good Unit Tests
 
 Good unit tests make a software project **sustainable**.
