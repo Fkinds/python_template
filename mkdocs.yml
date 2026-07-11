@@ -25,6 +25,11 @@ theme:
 # メニュー（目次）は nav で管理する
 nav:
   - Home: index.md
+  - ADR:
+      - 概要: adr/README.md
+      - テンプレート: adr/template.md
+      - Current:
+          - "ADR-0001 domain=attrs / DTO=pydantic": adr/current/0001-domain-attrs-dto-pydantic.md
 
 markdown_extensions:
   - admonition
