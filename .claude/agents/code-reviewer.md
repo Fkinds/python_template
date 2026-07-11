@@ -46,7 +46,7 @@ When invoked:
   duplicates / index matter; membership tests never on `list`
 - Default to `enum.Enum`; `StrEnum` only for mandatory string
   interop (API / DB / JSON value)
-- Tests follow Arrange-Act-Assert with `test_*_happy_path` / `test_*_error` prefixes
+- Tests follow Arrange-Act-Assert with `test_happy_*` / `test_error_*` prefixes
 - `domain/` and `usecases/` tests are Small (no DB, file I/O,
   network, system clock, or `sleep`); a test needing a DB for
   domain logic signals logic leaked into the repository

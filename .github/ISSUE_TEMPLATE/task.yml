@@ -1,0 +1,34 @@
+name: 作業タスク / Task
+description: 導入・整備などの作業タスク（Todo）
+title: "chore: "
+labels:
+  - enhancement
+body:
+  - type: markdown
+    attributes:
+      value: |
+        機能でもバグでもない作業タスク（導入・整備・調査など）。Todo を列挙してください。
+  - type: textarea
+    id: goal
+    attributes:
+      label: 目的 / ゴール
+      description: このタスクで達成したいこと
+    validations:
+      required: true
+  - type: textarea
+    id: todo
+    attributes:
+      label: Todo
+      description: 作業項目をチェックリストで（`- [ ]` 形式）
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: notes
+    attributes:
+      label: 備考
+      description: スコープの限定・参考情報など
+    validations:
+      required: false

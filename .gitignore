@@ -32,6 +32,9 @@ build/
 dist/
 wheels/
 
+# MkDocs build output
+site/
+
 # IDE / Editor
 .vscode/
 .idea/

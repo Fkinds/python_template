@@ -46,6 +46,8 @@ dev = [
     "djangorestframework-stubs",
     "pre-commit",
     "moto[s3]",
+    "mkdocs>=1.6.1",
+    "mkdocs-material>=9.7.6",
 ]
 
 [tool.ruff]
