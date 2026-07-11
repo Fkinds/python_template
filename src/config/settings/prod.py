@@ -1,4 +1,5 @@
 from config.settings.base import *  # noqa: F403
+from config.settings.base import REST_FRAMEWORK
 from config.settings.base import env
 
 DEBUG = False
@@ -15,3 +16,8 @@ SECURE_HSTS_INCLUDE_SUBDOMAINS = True
 SECURE_HSTS_PRELOAD = True
 SESSION_COOKIE_SECURE = True
 CSRF_COOKIE_SECURE = True
+
+# JSON のみを許可し、本番では DRF browsable API を無効化する。
+REST_FRAMEWORK["DEFAULT_RENDERER_CLASSES"] = [
+    "rest_framework.renderers.JSONRenderer",
+]
