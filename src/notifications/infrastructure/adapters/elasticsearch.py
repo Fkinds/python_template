@@ -8,7 +8,7 @@ from typing import Any
 from elasticsearch import Elasticsearch
 from elasticsearch import NotFoundError
 
-from common.infrastructure.adapters.base import Adapter
+from common.infrastructure.adapters.supertype import Adapter
 from common.usecases.protocols import LoggerFactory
 from notifications.domain.event_type import EventType
 from notifications.domain.notification_channel import NotificationChannel
