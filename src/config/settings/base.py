@@ -137,7 +137,7 @@ DISCORD_WEBHOOK_URL: str = env(
     default="",
 )
 
-REST_FRAMEWORK = {
+REST_FRAMEWORK: dict[str, object] = {
     "DEFAULT_PAGINATION_CLASS": (
         "rest_framework.pagination.PageNumberPagination"
     ),

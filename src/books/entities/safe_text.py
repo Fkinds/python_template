@@ -2,6 +2,8 @@ import attrs
 from django.core.exceptions import ValidationError
 from django.core.validators import RegexValidator
 
+from common.domain.entities.supertype import ValueObject
+
 _allowed_text_validator = RegexValidator(
     regex=r"^[\w\s\u3000-\u303F\u30FC\u30FB\u3001\u3002\uFF01\uFF1F\-,.!?'\"()&+:;/]+$",
     message="使用できない文字が含まれています",
@@ -33,7 +35,7 @@ def _validate_safe_chars(
 
 
 @attrs.frozen(kw_only=True)
-class SafeText:
+class SafeText(ValueObject):
     """検証済みの安全なテキストを表すバリューオブジェクト."""
 
     value: str = attrs.field(
