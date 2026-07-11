@@ -17,10 +17,29 @@ When invoked:
 - Line length <= 79 characters
 - Double quotes, single-line imports
 - Value objects use `attrs.frozen` + `kw_only=True` (in `entities/`)
+- Domain types inherit the `common` supertypes: entities extend
+  `Entity`, value objects extend `ValueObject`; entity subclasses
+  are decorated `@attrs.frozen(kw_only=True, eq=False)` so the
+  base's id-based equality is not regenerated as all-field equality
+- Concrete infra/interface classes extend their base supertype
+  (`Adapter` / `Factory` / `Repository`) alongside the Protocol
 - Immutable objects: read via `@property` only, no setters;
   invariants enforced at construction (validator /
   `__attrs_post_init__`), invalid states unconstructible
-- Business logic is NOT in Django models (models are persistence only)
+- Business logic is NOT in Django models (models are persistence only);
+  it lives in `domain/` (entities / value objects / services), not
+  serializers or usecases
+- No anemic domain model (ドメインモデル貧血症): flag data-only
+  entities whose rules live elsewhere, and usecases that mutate an
+  entity's state field-by-field or branch on its fields instead of
+  calling an intent-revealing method on the entity
+- Aggregates mutated only through their root; other aggregates
+  referenced by id, not by embedded object graph
+- Domain types model exact valid ranges (value object / `Enum`)
+  instead of bare primitives with rules (no primitive obsession)
+- No cross-context coupling: a package never imports another
+  context's `domain/`; boundaries crossed by id + DTO + `Protocol`
+  port (ACL), and `uv run lint-imports` passes
 - Models have `related_name`, `Meta.ordering`, and `__str__`
 - Serializers are separated by action (list vs detail) with `read_only_fields`
 - Collections default to `set` / `frozenset` unless order /
