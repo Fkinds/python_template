@@ -2,7 +2,9 @@ from typing import Any
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
+from hypothesis import HealthCheck
 from hypothesis import given
+from hypothesis import settings
 from hypothesis import strategies as st
 from rest_framework import status
 from rest_framework.test import APIClient
@@ -144,8 +146,16 @@ class TestBookListCreate:
             ),
         ).filter(lambda s: s.strip())
     )
-    def test_happy_create_accepts_any_valid_title(self, title: str) -> None:
+    @settings(
+        deadline=None,
+        suppress_health_check=[HealthCheck.function_scoped_fixture],
+    )
+    def test_happy_create_accepts_any_valid_title(
+        self, fake_notifier: FakeNotifier, title: str
+    ) -> None:
         # Arrange
+        # グローバル DI container を FakeNotifier に固定し、他テストの
+        # override リークに依存しないようにする (fake_notifier fixture)。
         Book.objects.all().delete()
         Author.objects.all().delete()
         client = APIClient()
