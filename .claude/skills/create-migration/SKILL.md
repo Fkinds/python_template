@@ -9,17 +9,17 @@ Create and apply Django migrations. Always use `uv run`.
 ## 1. Generate migration files
 
 ```bash
-uv run python src/manage.py makemigrations
+uv run python manage.py makemigrations
 ```
 
 ## 2. Apply migrations
 
 ```bash
-uv run python src/manage.py migrate
+uv run python manage.py migrate
 ```
 
 ## 3. Check for unapplied migrations
 
 ```bash
-uv run python src/manage.py showmigrations
+uv run python manage.py showmigrations
 ```

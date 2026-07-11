@@ -9,6 +9,12 @@ by governing what happens **between** contexts.
 - Each first-party package is one **Bounded Context** with its own
   model and ubiquitous language: `authors`, `books`,
   `notifications`. `common` is shared kernel; `config` is wiring.
+- **`books` is a deliberate exception (YAGNI):** it is a simple
+  CRUD module without the full `domain/usecases/interfaces/
+  infrastructure` layering and has no import-linter contract. The
+  full-layer / bounded-context expectations below apply to
+  `authors`, `notifications`, and `common`. Only build `books`
+  out into full DDD layers when its logic actually warrants it.
 - Inside a context a term has **one** meaning. The same word may
   mean different things in different contexts (a "Book" in
   `books` need not equal a "Book" reference in `notifications`) —

@@ -63,6 +63,11 @@ Large few**.
 Common smell: "domain logic needs a DB" → logic has leaked into
 the repository; extract it as a pure function and test it Small.
 
+Markers (`unit` / `integration` / `functional` / `linting`) are
+**auto-attached by `tests/conftest.py` from the test's directory**
+— do not add `@pytest.mark.*` by hand; place the test in the
+right folder (`tests/<marker>/...`).
+
 ## Rules
 
 - Classify every test as Small / Medium / Large by its ban list
