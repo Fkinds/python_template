@@ -6,7 +6,7 @@ from authors.domain.entities.author import Author as AuthorEntity
 from authors.models import Author as AuthorModel
 from authors.usecases.protocols import AuthorRepository
 from common.domain.entities.exceptions import EntityDoesNotExistError
-from common.interfaces.repositories.base import Repository
+from common.interfaces.repositories.supertype import Repository
 
 
 class AuthorRepositoryImpl(Repository, AuthorRepository):
