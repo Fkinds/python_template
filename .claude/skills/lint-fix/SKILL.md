@@ -27,13 +27,23 @@ uv run ruff format src tests lint_rules
 uv run mypy src lint_rules
 ```
 
-## 4. Fixit custom lint rules
+## 4. ty type check (Astral)
+
+Second type checker; runs as its own CI job. mypy and ty disagree
+on some inferences (e.g. heterogeneous settings dicts), so run
+both — passing mypy alone is not enough.
+
+```bash
+uv run ty check src lint_rules
+```
+
+## 5. Fixit custom lint rules
 
 ```bash
 uv run fixit lint src tests lint_rules
 ```
 
-## 5. Import-linter (layer contracts)
+## 6. Import-linter (layer contracts)
 
 ```bash
 uv run lint-imports
@@ -42,5 +52,5 @@ uv run lint-imports
 ## Verify (no auto-fix, full chain — matches CLAUDE.md)
 
 ```bash
-uv run ruff check src tests lint_rules && uv run ruff format --check src tests lint_rules && uv run mypy src lint_rules && uv run fixit lint src tests lint_rules && uv run lint-imports
+uv run ruff check src tests lint_rules && uv run ruff format --check src tests lint_rules && uv run mypy src lint_rules && uv run ty check src lint_rules && uv run fixit lint src tests lint_rules && uv run lint-imports
 ```
