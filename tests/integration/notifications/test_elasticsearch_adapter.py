@@ -56,7 +56,7 @@ class TestElasticsearchNotificationLogWriterImpl:
         _refresh_index(client=es_client)
         result = es_client.search(
             index=_INDEX_NAME,
-            body={"query": {"match_all": {}}},
+            query={"match_all": {}},
         )
         assert result["hits"]["total"]["value"] == 1
         doc = result["hits"]["hits"][0]["_source"]
@@ -94,7 +94,7 @@ class TestElasticsearchNotificationLogWriterImpl:
         _refresh_index(client=es_client)
         result = es_client.search(
             index=_INDEX_NAME,
-            body={"query": {"match_all": {}}},
+            query={"match_all": {}},
         )
         assert result["hits"]["total"]["value"] == 2
 
@@ -186,7 +186,7 @@ class TestElasticsearchNotificationLogReaderImpl:
         _refresh_index(client=es_client)
         search_result = es_client.search(
             index=_INDEX_NAME,
-            body={"query": {"match_all": {}}},
+            query={"match_all": {}},
         )
         doc_id: str = search_result["hits"]["hits"][0]["_id"]
 

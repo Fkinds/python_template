@@ -17,18 +17,18 @@ from notifications.domain.notification_status import NotificationStatus
 
 _INDEX_NAME = "notification_logs"
 
+# elasticsearch-py 9 では body= が廃止され、mappings 等を
+# キーワード引数で直接渡す。ここは create(mappings=...) に渡す本体。
 _INDEX_MAPPING: dict[str, Any] = {
-    "mappings": {
-        "properties": {
-            "event_type": {"type": "keyword"},
-            "message": {"type": "text"},
-            "status": {"type": "keyword"},
-            "detail": {"type": "text"},
-            "recipient": {"type": "keyword"},
-            "channel": {"type": "keyword"},
-            "retry_count": {"type": "integer"},
-            "created_at": {"type": "date"},
-        }
+    "properties": {
+        "event_type": {"type": "keyword"},
+        "message": {"type": "text"},
+        "status": {"type": "keyword"},
+        "detail": {"type": "text"},
+        "recipient": {"type": "keyword"},
+        "channel": {"type": "keyword"},
+        "retry_count": {"type": "integer"},
+        "created_at": {"type": "date"},
     },
 }
 
@@ -53,7 +53,7 @@ class ElasticsearchNotificationLogWriterImpl(Adapter):
         if not self._client.indices.exists(index=_INDEX_NAME):
             self._client.indices.create(
                 index=_INDEX_NAME,
-                body=_INDEX_MAPPING,
+                mappings=_INDEX_MAPPING,
             )
             self._logger.info(
                 "ES インデックスを作成: %s",
@@ -88,7 +88,7 @@ class ElasticsearchNotificationLogWriterImpl(Adapter):
         self._client.index(
             index=_INDEX_NAME,
             id=str(uuid.uuid7()),
-            body=doc,
+            document=doc,
         )
 
 
@@ -114,12 +114,10 @@ class ElasticsearchNotificationLogReaderImpl(Adapter):
         from_ = (page - 1) * page_size
         response: Any = self._client.search(
             index=_INDEX_NAME,
-            body={
-                "query": {"match_all": {}},
-                "sort": [{"created_at": {"order": "desc"}}],
-                "from": from_,
-                "size": page_size,
-            },
+            query={"match_all": {}},
+            sort=[{"created_at": {"order": "desc"}}],
+            from_=from_,
+            size=page_size,
         )
         total: int = response["hits"]["total"]["value"]
         logs = [
