@@ -4,12 +4,12 @@ from datetime import datetime
 
 import attrs
 
-from common.domain.entities.base import Entity
+from common.domain.entities.supertype import Entity
 from common.domain.validators import not_empty
 from common.domain.validators import validate_not_empty
 
 
-@attrs.frozen(kw_only=True)
+@attrs.frozen(kw_only=True, eq=False)
 class Author(Entity):
     """著者を表すドメインエンティティ.
 
