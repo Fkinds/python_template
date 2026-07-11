@@ -12,10 +12,13 @@ on:
   pull_request:
     types: [opened, synchronize, reopened, ready_for_review]
 
-# 既定の GITHUB_TOKEN 権限を最小化しつつ、レビューコメント投稿に必要な権限のみ付与
+# 既定の GITHUB_TOKEN 権限を最小化しつつ、必要な権限のみ付与。
+# id-token: write は claude-code-action が OAuth トークン認証で
+# OIDC トークンを取得するために必須。
 permissions:
   contents: read
   pull-requests: write
+  id-token: write
 
 concurrency:
   group: claude-review-${{ github.event.pull_request.number }}
@@ -31,6 +34,7 @@ jobs:
     permissions:
       contents: read
       pull-requests: write
+      id-token: write
     env:
       # secret が未設定なら 'false' になり、下のステップがスキップされる
       # （このジョブは必須チェックにしないので、未設定でも CI を壊さない）
