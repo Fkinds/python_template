@@ -1,0 +1,50 @@
+name: バグ報告 / Bug report
+description: 不具合の報告
+title: "fix: "
+labels:
+  - bug
+body:
+  - type: markdown
+    attributes:
+      value: |
+        不具合の報告です。再現手順と、期待した挙動・実際の挙動を書いてください。
+  - type: textarea
+    id: summary
+    attributes:
+      label: 概要
+      description: 何が起きているか
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: 再現手順
+      description: 再現する最小の手順
+      value: |
+        1.
+        2.
+        3.
+    validations:
+      required: true
+  - type: textarea
+    id: expected-actual
+    attributes:
+      label: 期待した挙動 / 実際の挙動
+      description: 期待と実際の差分
+      value: |
+        **期待**:
+
+        **実際**:
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: 環境
+      description: OS / Python / 依存バージョン、ログやスタックトレースなど
+      placeholder: |
+        - OS:
+        - Python:
+        - branch / commit:
+    validations:
+      required: false
