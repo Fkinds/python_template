@@ -62,6 +62,13 @@ the `code-quality` and `unit-testing-strategy` skills.
   into string contexts and blurs the type boundary.
 - To preserve the distinction, use `Enum` and convert
   explicitly via `.value`.
+- Qualifying exception: a domain enum whose members are written
+  **directly** to an external store / wire and reconstructed from
+  those strings (e.g. `notifications` `EventType` /
+  `NotificationStatus` / `NotificationChannel` → Elasticsearch
+  `keyword` fields + API JSON, rebuilt via an attrs `converter`)
+  is mandatory string interop — keep it a `StrEnum`. Converting to
+  `Enum` would only add `.value` at every boundary for no gain.
 
 ## 5. Tests: Heavy Mocking is a Design Smell
 
