@@ -1,0 +1,38 @@
+site_name: fkinds-python docs
+site_description: Django REST Framework API template documentation
+docs_dir: docs
+site_dir: site
+
+theme:
+  name: material
+  language: ja
+  palette:
+    - scheme: default
+      primary: teal
+      toggle:
+        icon: material/weather-night
+        name: Switch to dark mode
+    - scheme: slate
+      primary: teal
+      toggle:
+        icon: material/weather-sunny
+        name: Switch to light mode
+  features:
+    - navigation.instant
+    - navigation.top
+    - content.code.copy
+
+# メニュー（目次）は nav で管理する
+nav:
+  - Home: index.md
+  - ADR:
+      - 概要: adr/README.md
+      - テンプレート: adr/template.md
+      - Current:
+          - "ADR-0001 domain=attrs / DTO=pydantic": adr/current/0001-domain-attrs-dto-pydantic.md
+
+markdown_extensions:
+  - admonition
+  - toc:
+      permalink: true
+  - pymdownx.superfences
