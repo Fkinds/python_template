@@ -41,7 +41,7 @@ nothing is silently swallowed.
 
 ## Definition Locations
 
-| Directory | base.py | exceptions.py |
+| Directory | supertype.py | exceptions.py |
 |---|---|---|
 | `common/domain/` | — | AppError (apex) |
 | `common/domain/entities/` | Entity, ValueObject | EntityError, EntityDoesNotExistError, GenerateRepositoryError |
