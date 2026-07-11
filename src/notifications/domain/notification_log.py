@@ -4,7 +4,7 @@ from datetime import datetime
 
 import attrs
 
-from common.domain.entities.base import Entity
+from common.domain.entities.supertype import Entity
 from common.domain.validators import not_empty
 from common.domain.validators import validate_not_empty
 from notifications.domain.event_type import EventType
@@ -12,7 +12,7 @@ from notifications.domain.notification_channel import NotificationChannel
 from notifications.domain.notification_status import NotificationStatus
 
 
-@attrs.frozen(kw_only=True)
+@attrs.frozen(kw_only=True, eq=False)
 class NotificationLog(Entity):
     """通知履歴を表すドメインエンティティ.
 
