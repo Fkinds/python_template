@@ -22,9 +22,35 @@ theme:
     - navigation.top
     - content.code.copy
 
+plugins:
+  - search
+  # .claude/ 配下のルール/スキルを単一ソースのまま取り込む（transclude）
+  - include-markdown
+
 # メニュー（目次）は nav で管理する
 nav:
   - Home: index.md
+  - CLAUDE.md: claude-md.md
+  - Rules:
+      - 概要: rules/index.md
+      - ワークフロー: rules/workflow.md
+      - Python 規約: rules/python-conventions.md
+      - DDD レイヤ構造: rules/ddd-architecture.md
+      - DDD ドメイン設計: rules/ddd-domain-design.md
+      - DDD コンテキスト境界: rules/ddd-context-boundary-design.md
+      - 例外アーキテクチャ: rules/exception-architecture.md
+      - セキュリティ: rules/security.md
+      - テスト戦略: rules/test-strategy.md
+  - Skills:
+      - 概要: skills/index.md
+      - コード品質: skills/code-quality.md
+      - デザインパターン: skills/design-patterns.md
+      - セキュリティ: skills/security.md
+      - テストコード品質: skills/test-code-quality.md
+      - ユニットテスト戦略: skills/unit-testing-strategy.md
+      - Lint 修正: skills/lint-fix.md
+      - テスト実行: skills/run-tests.md
+      - マイグレーション作成: skills/create-migration.md
   - ADR:
       - 概要: adr/README.md
       - テンプレート: adr/template.md
