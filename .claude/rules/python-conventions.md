@@ -88,6 +88,28 @@ the `code-quality` and `unit-testing-strategy` skills.
 - See the `code-quality` skill for examples and f-string vs
   lazy-logging formatting.
 
+## 7. Naming
+
+| Target | Convention | Example |
+|---|---|---|
+| Files / folders | snake_case | `content_types/content_type_a.py` |
+| Classes | CamelCase | `FooClass` |
+| Functions / methods | snake_case | `do_something` |
+| Constants | UPPER_CASE | `CONSTANT_NAME` |
+| Private members | leading `_` | `_do_something` |
+| Builtin conflicts | trailing `_` | `property_` |
+| Tests (happy) | `test_happy_*` | `test_happy_create_with_valid_data` |
+| Tests (error) | `test_error_*` | `test_error_create_with_missing_field` |
+| Mocks | `mock_*` | `mock_doing` |
+
+- Use descriptive names; avoid abbreviations (`cate` →
+  `category`, `name_str` → `name`).
+- Semantic naming: booleans `is_*` / `has_*` (`is_enabled` not
+  `enabled`); collections are plural (`accounts` not
+  `account_list`); never encode the type in the name.
+- Test naming applies to behavioral / domain tests. Meta tests
+  (lint-rule tests, infra scaffolding) are exempt.
+
 ## Rules
 
 - Immutable objects: `frozen` + `@property`, no setters,
@@ -105,3 +127,7 @@ the `code-quality` and `unit-testing-strategy` skills.
   DI + Stub / Fake
 - No mutable default arguments; compare to `None` with `is`;
   test truthiness directly
+- Naming: snake_case files/functions, CamelCase classes,
+  UPPER_CASE constants, `_` private, `is_`/`has_` booleans,
+  plural collections, no type encoding, descriptive over
+  abbreviated

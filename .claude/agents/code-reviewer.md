@@ -60,7 +60,11 @@ When invoked:
 - Heavy `mock.patch` / `MagicMock` usage flagged as a design
   smell (missing DI / seams), not just a test issue
 - Test descriptions and business comments are in Japanese
-- No security issues (SQL injection, XSS, exposed secrets)
+- No security issues (SQL injection, XSS, exposed secrets); input
+  validated at the deserializer boundary; 5xx never leak
+  detail/traceback (see `rules/security.md`). Missing
+  `permission_classes` is intentional in this template (auth
+  out-of-scope) — do not flag it as a bug
 - No unbounded queries or in-memory list expansion of large datasets
 - Unknown / large data iterated lazily (`iterator()` /
   generator), not materialized into a `list`
