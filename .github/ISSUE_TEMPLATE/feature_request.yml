@@ -1,0 +1,42 @@
+name: 機能要望 / Feature request
+description: 新機能や改善の提案
+title: "feat: "
+labels:
+  - feature
+body:
+  - type: markdown
+    attributes:
+      value: |
+        機能追加・改善の提案です。目的と完了条件を具体的に書いてください。
+  - type: textarea
+    id: purpose
+    attributes:
+      label: 目的
+      description: なぜこの機能が必要か / 解決したい課題
+      placeholder: 例）現在のテンプレートを project に適用したい
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance-criteria
+    attributes:
+      label: 完了条件
+      description: 満たすべき条件をチェックリストで（`- [ ]` 形式）
+      value: |
+        - [ ]
+        - [ ]
+    validations:
+      required: true
+  - type: textarea
+    id: references
+    attributes:
+      label: 参考情報
+      description: 関連する URL・ドキュメント・Issue/PR など
+    validations:
+      required: false
+  - type: textarea
+    id: notes
+    attributes:
+      label: 備考
+      description: その他、補足事項があれば
+    validations:
+      required: false
