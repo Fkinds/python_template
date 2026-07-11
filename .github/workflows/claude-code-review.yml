@@ -1,0 +1,65 @@
+name: Claude Code Review
+
+# PR のコードレビューを Claude Code に実行させる。
+# 有効化には、リポジトリの Settings > Secrets and variables > Actions に
+# `ANTHROPIC_API_KEY` を登録する必要がある（未登録なら secret が空になり、
+# 下の if 条件でジョブがスキップされる）。
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened, ready_for_review]
+
+# 既定の GITHUB_TOKEN 権限を最小化しつつ、レビューコメント投稿に必要な権限のみ付与
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: claude-review-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  claude-review:
+    runs-on: ubuntu-latest
+    # draft PR・bot 起票の PR ではスキップ
+    if: >-
+      github.event.pull_request.draft == false &&
+      github.event.sender.type != 'Bot'
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      # secret が未設定なら 'false' になり、下のステップがスキップされる
+      # （このジョブは必須チェックにしないので、未設定でも CI を壊さない）
+      has_api_key: ${{ secrets.ANTHROPIC_API_KEY != '' }}
+    steps:
+      - name: Checkout
+        if: env.has_api_key == 'true'
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Claude Code Review
+        if: env.has_api_key == 'true'
+        uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          track_progress: true
+          prompt: |
+            あなたはこの Django REST Framework テンプレート（Python 3.14 /
+            strict MyPy）の code reviewer です。`.claude/agents/code-reviewer.md`
+            のチェックリストと `.claude/rules/` の各ルールに沿って、この PR の
+            差分をレビューしてください。特に次の観点を確認します:
+
+            - 型注釈（MyPy strict）/ 行長 79 / ダブルクォート / 単一行 import
+            - 値オブジェクトは `attrs.frozen(kw_only=True)`、common スーパータイプ継承
+            - ビジネスロジックは domain/ に置き、models/serializers/usecases に
+              流出していないか（ドメインモデル貧血症の禁止）
+            - 例外は AppError ピラミッド経由、5xx で detail/traceback を漏らさない
+            - serializer は fields 明示 + read_only_fields、"__all__" 禁止
+            - コンテキスト境界を越える import（他 context の domain/）が無いか
+            - テストは Arrange-Act-Assert、`test_happy_*` / `test_error_*` 接頭辞、
+              domain/usecases テストは Small（DB / I/O / clock 不使用）
+
+            指摘は日本語で、該当ファイル・行を添えて簡潔に。問題が無ければ
+            その旨を伝えてください。
