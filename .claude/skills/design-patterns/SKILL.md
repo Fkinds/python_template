@@ -166,6 +166,10 @@ domain purity are import-linter contracts in `pyproject.toml`.
 
 ### Context map (who depends on whom)
 
+The full catalog of mapping patterns (incl. Customer/Supplier,
+Conformist) is canonical in `rules/ddd-context-boundary-design.md`
+§3. This table only pins how they apply **here** (the `Here` column).
+
 | Relationship | Meaning | Here |
 |---|---|---|
 | **Shared Kernel** | co-owned minimal model | `common` — keep it small |
@@ -218,13 +222,9 @@ every base in the MRO is initialized.
 - Only introduce a pattern when a code smell justifies it (YAGNI)
 - Protocol in `usecases/protocols/`; implementation in `infrastructure/adapters/`
 - Concrete classes satisfying a Protocol: `*Impl` suffix
-- Value objects are always `attrs.frozen(kw_only=True)`
 - One use case class = one business operation
 - DI wiring only in `infrastructure/containers/` (Composition Root)
-- Value Object by default; Entity only with identity + lifecycle
-- Mutate an aggregate only through its root; reference other
-  aggregates by id, one aggregate per transaction
-- Behavior lives on domain objects / services, not models,
-  serializers, or usecases (no anemic model)
-- Cross a context boundary by id + DTO through a Protocol port
-  (ACL); never import another context's `domain/`
+- The domain / aggregate / context-boundary MUSTs are canonical in
+  `rules/ddd-domain-design.md`, `rules/ddd-context-boundary-design.md`,
+  and `rules/ddd-architecture.md` — this skill holds their worked
+  examples, not a second copy of the mandates
