@@ -7,6 +7,11 @@ name: Claude Code Review
 #   2. リポジトリの Settings > Secrets and variables > Actions に
 #      `CLAUDE_CODE_OAUTH_TOKEN` として登録
 # 未登録なら secret が空になり、下の if 条件でジョブがスキップされる。
+#
+# 【仕様メモ】このワークフローファイル自身を変更する PR では、
+# claude-code-action の workflow validation によりレビューが実行されず
+# 自己スキップする（ジョブは exit 0 のまま）。ワークフロー変更 PR で
+# レビューコメントが出ないのは異常ではなく正常な挙動。
 
 on:
   pull_request:
@@ -36,8 +41,9 @@ jobs:
       pull-requests: write
       id-token: write
     env:
-      # secret が未設定なら 'false' になり、下のステップがスキップされる
-      # （このジョブは必須チェックにしないので、未設定でも CI を壊さない）
+      # secret が未設定なら 'false' になり、下のステップがスキップされる。
+      # スキップされたジョブは GitHub 上 Success 扱いのため、必須チェック
+      # （#144 で required 化）でも未設定時に PR をブロックしない。
       has_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
     steps:
       - name: Checkout
@@ -47,11 +53,14 @@ jobs:
           fetch-depth: 0
 
       - name: Claude Code Review
+        id: review
         if: env.has_token == 'true'
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
           track_progress: true
+          # 再実行のたびにスタブコメントを増殖させず、単一コメントを更新する
+          use_sticky_comment: true
           prompt: |
             あなたはこの Django REST Framework テンプレート（Python 3.14 /
             strict MyPy）の code reviewer です。`.claude/agents/code-reviewer.md`
@@ -70,3 +79,26 @@ jobs:
 
             指摘は日本語で、該当ファイル・行を添えて簡潔に。問題が無ければ
             その旨を伝えてください。
+
+      # トークン失効時、上のレビューステップは Claude Code SDK が is_error で
+      # 即終了しても exit 0（緑）のまま終わり、レビューが投稿されない。
+      # 必須チェック化しても「緑だが未レビュー」がすり抜けるため、実行結果
+      # JSON の is_error を検査し、失効等のエラー時はジョブを fail させる。
+      # 実行結果ファイルが無い/空（ワークフロー自己スキップ等）の場合は
+      # 何も判定せず正常終了する。
+      - name: Detect Claude Code execution error
+        if: env.has_token == 'true'
+        env:
+          EXECUTION_FILE: ${{ steps.review.outputs.execution_file }}
+        run: |
+          if [ -z "$EXECUTION_FILE" ] || [ ! -f "$EXECUTION_FILE" ]; then
+            echo "実行結果ファイルが無いため is_error 検査をスキップします。"
+            exit 0
+          fi
+          if jq -e '[.. | objects | select(has("is_error")) | .is_error] | any' \
+              "$EXECUTION_FILE" > /dev/null; then
+            echo "::error::Claude Code がエラーで終了しました（トークン失効の可能性）。secret CLAUDE_CODE_OAUTH_TOKEN を再生成してください。"
+            jq '[.. | objects | select(has("is_error"))]' "$EXECUTION_FILE" || true
+            exit 1
+          fi
+          echo "Claude Code の実行にエラーはありませんでした。"
