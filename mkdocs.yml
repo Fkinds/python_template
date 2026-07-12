@@ -56,6 +56,10 @@ nav:
       - テンプレート: adr/template.md
       - Current:
           - "ADR-0001 domain=attrs / DTO=pydantic": adr/current/0001-domain-attrs-dto-pydantic.md
+          - "ADR-0002 AppError ピラミッド / RFC9457": adr/current/0002-app-error-pyramid-rfc9457.md
+          - "ADR-0003 Enum 既定 / StrEnum 例外": adr/current/0003-enum-default-strenum-exception.md
+          - "ADR-0004 Bounded Context / import-linter": adr/current/0004-bounded-context-import-linter.md
+          - "ADR-0005 テストサイズ分類": adr/current/0005-test-size-classification.md
 
 markdown_extensions:
   - admonition
