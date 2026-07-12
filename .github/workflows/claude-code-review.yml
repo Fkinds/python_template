@@ -83,7 +83,10 @@ jobs:
       # トークン失効時、上のレビューステップは Claude Code SDK が is_error で
       # 即終了しても exit 0（緑）のまま終わり、レビューが投稿されない。
       # 必須チェック化しても「緑だが未レビュー」がすり抜けるため、実行結果
-      # JSON の is_error を検査し、失効等のエラー時はジョブを fail させる。
+      # JSON の最終結果（type == "result"）の is_error を検査し、失効等の
+      # エラー時はジョブを fail させる。中間の tool_result オブジェクトも
+      # is_error を持つ（レビュー中にツールが非0終了した等）が、それは
+      # レビュー成否とは無関係なので type == "result" のみを対象にする。
       # 実行結果ファイルが無い/空（ワークフロー自己スキップ等）の場合は
       # 何も判定せず正常終了する。
       - name: Detect Claude Code execution error
@@ -95,10 +98,10 @@ jobs:
             echo "実行結果ファイルが無いため is_error 検査をスキップします。"
             exit 0
           fi
-          if jq -e '[.. | objects | select(has("is_error")) | .is_error] | any' \
+          if jq -e '[.. | objects | select(.type? == "result") | .is_error] | any' \
               "$EXECUTION_FILE" > /dev/null; then
             echo "::error::Claude Code がエラーで終了しました（トークン失効の可能性）。secret CLAUDE_CODE_OAUTH_TOKEN を再生成してください。"
-            jq '[.. | objects | select(has("is_error"))]' "$EXECUTION_FILE" || true
+            jq '[.. | objects | select(.type? == "result")]' "$EXECUTION_FILE" || true
             exit 1
           fi
           echo "Claude Code の実行にエラーはありませんでした。"
