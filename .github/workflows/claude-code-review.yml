@@ -1,72 +1,44 @@
 name: Claude Code Review
 
-# PR のコードレビューを Claude Code に実行させる。
-# 認証は Claude サブスク（Pro/Max）の OAuth トークンを使う。
-# 有効化手順:
-#   1. ローカルで `claude setup-token` を実行しトークンを取得（ブラウザ認証）
-#   2. リポジトリの Settings > Secrets and variables > Actions に
-#      `CLAUDE_CODE_OAUTH_TOKEN` として登録
-# 未登録なら secret が空になり、下の if 条件でジョブがスキップされる。
-
 on:
   pull_request:
-    types: [opened, synchronize, reopened, ready_for_review]
-
-# 既定の GITHUB_TOKEN 権限を最小化しつつ、必要な権限のみ付与。
-# id-token: write は claude-code-action が OAuth トークン認証で
-# OIDC トークンを取得するために必須。
-permissions:
-  contents: read
-  pull-requests: write
-  id-token: write
-
-concurrency:
-  group: claude-review-${{ github.event.pull_request.number }}
-  cancel-in-progress: true
+    types: [opened, synchronize, ready_for_review, reopened]
+    # Optional: Only run on specific file changes
+    # paths:
+    #   - "src/**/*.ts"
+    #   - "src/**/*.tsx"
+    #   - "src/**/*.js"
+    #   - "src/**/*.jsx"
 
 jobs:
   claude-review:
+    # Optional: Filter by PR author
+    # if: |
+    #   github.event.pull_request.user.login == 'external-contributor' ||
+    #   github.event.pull_request.user.login == 'new-developer' ||
+    #   github.event.pull_request.author_association == 'FIRST_TIME_CONTRIBUTOR'
+
     runs-on: ubuntu-latest
-    # draft PR・bot 起票の PR ではスキップ
-    if: >-
-      github.event.pull_request.draft == false &&
-      github.event.sender.type != 'Bot'
     permissions:
       contents: read
-      pull-requests: write
+      pull-requests: read
+      issues: read
       id-token: write
-    env:
-      # secret が未設定なら 'false' になり、下のステップがスキップされる
-      # （このジョブは必須チェックにしないので、未設定でも CI を壊さない）
-      has_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN != '' }}
+
     steps:
-      - name: Checkout
-        if: env.has_token == 'true'
+      - name: Checkout repository
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0
+          fetch-depth: 1
 
-      - name: Claude Code Review
-        if: env.has_token == 'true'
+      - name: Run Claude Code Review
+        id: claude-review
         uses: anthropics/claude-code-action@v1
         with:
           claude_code_oauth_token: ${{ secrets.CLAUDE_CODE_OAUTH_TOKEN }}
-          track_progress: true
-          prompt: |
-            あなたはこの Django REST Framework テンプレート（Python 3.14 /
-            strict MyPy）の code reviewer です。`.claude/agents/code-reviewer.md`
-            のチェックリストと `.claude/rules/` の各ルールに沿って、この PR の
-            差分をレビューしてください。特に次の観点を確認します:
+          plugin_marketplaces: 'https://github.com/anthropics/claude-code.git'
+          plugins: 'code-review@claude-code-plugins'
+          prompt: '/code-review:code-review ${{ github.repository }}/pull/${{ github.event.pull_request.number }}'
+          # See https://github.com/anthropics/claude-code-action/blob/main/docs/usage.md
+          # or https://code.claude.com/docs/en/cli-reference for available options
 
-            - 型注釈（MyPy strict）/ 行長 79 / ダブルクォート / 単一行 import
-            - 値オブジェクトは `attrs.frozen(kw_only=True)`、common スーパータイプ継承
-            - ビジネスロジックは domain/ に置き、models/serializers/usecases に
-              流出していないか（ドメインモデル貧血症の禁止）
-            - 例外は AppError ピラミッド経由、5xx で detail/traceback を漏らさない
-            - serializer は fields 明示 + read_only_fields、"__all__" 禁止
-            - コンテキスト境界を越える import（他 context の domain/）が無いか
-            - テストは Arrange-Act-Assert、`test_happy_*` / `test_error_*` 接頭辞、
-              domain/usecases テストは Small（DB / I/O / clock 不使用）
-
-            指摘は日本語で、該当ファイル・行を添えて簡潔に。問題が無ければ
-            その旨を伝えてください。
