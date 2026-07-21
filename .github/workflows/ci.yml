@@ -120,7 +120,7 @@ jobs:
     runs-on: ubuntu-latest
     services:
       elasticsearch:
-        image: elasticsearch:9.4.3
+        image: elasticsearch:9.4.4
         env:
           discovery.type: single-node
           xpack.security.enabled: "false"
@@ -189,7 +189,7 @@ jobs:
           --health-timeout=5s
           --health-retries=5
       elasticsearch:
-        image: elasticsearch:9.4.3
+        image: elasticsearch:9.4.4
         env:
           discovery.type: single-node
           xpack.security.enabled: "false"
